@@ -29,13 +29,19 @@
         return $data;
     }
 
+    function contains_invalid_characters($data) {
+        return preg_match('/[¹²³⁴⁵⁶⁷⁸⁹⁰₀₁₂₃₄₅₆₇₈₉]/', $data);
+    }
+
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (empty($_POST["name"])) {
             $nameErr = "Vārds ir obligāts";
         } else {
             $name = test_input($_POST["name"]);
-            if (!preg_match("/^[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ\-' ]{2,}$/u",$name)) {
-                $nameErr = "Atļauti tikai burti, defise un apostrofi. Vismaz 2 rakstzīmes.";
+            if (contains_invalid_characters($name)) {
+                $nameErr = "Vārdā ir nederīgas rakstzīmes";
+            } elseif (!preg_match("/^[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ\- ]{2,}$/u",$name)) {
+                $nameErr = "Atļauti tikai burti un defise. Vismaz 2 rakstzīmes.";
             }
         }
 
@@ -43,8 +49,10 @@
             $surnameErr = "Uzvārds ir obligāts";
         } else {
             $surname = test_input($_POST["surname"]);
-            if (!preg_match("/^[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ\-' ]{2,}$/u",$surname)) {
-                $surnameErr = "Atļauti tikai burti, defise un apostrofi. Vismaz 2 rakstzīmes.";
+            if (contains_invalid_characters($surname)) {
+                $surnameErr = "Uzvārdā ir nederīgas rakstzīmes";
+            } elseif (!preg_match("/^[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ\- ]{2,}$/u",$surname)) {
+                $surnameErr = "Atļauti tikai burti un defise. Vismaz 2 rakstzīmes.";
             }
         }
 
@@ -52,7 +60,9 @@
             $ageErr = "Vecums ir obligāts";
         } else {
             $age = test_input($_POST["age"]);
-            if (!filter_var($age, FILTER_VALIDATE_INT)) {
+            if (contains_invalid_characters($age)) {
+                $ageErr = "Vecumā ir nederīgas rakstzīmes";
+            } elseif (!filter_var($age, FILTER_VALIDATE_INT)) {
                 $ageErr = "Nederīgs vecuma formāts";
             }
         }
@@ -61,7 +71,9 @@
             $phoneErr = "Telefona numurs ir obligāts";
         } else {
             $phone = test_input($_POST["phone"]);
-            if (!preg_match("/^[0-9]{8}$/",$phone)) {
+            if (contains_invalid_characters($phone)) {
+                $phoneErr = "Telefona numurā ir nederīgas rakstzīmes";
+            } elseif (!preg_match("/^[0-9]{8}$/",$phone)) {
                 $phoneErr = "Nederīgs telefona numura formāts";
             }
         }
@@ -70,7 +82,9 @@
             $addressErr = "Adrese ir obligāta";
         } else {
             $address = test_input($_POST["address"]);
-            if (preg_match("/^[0-9]+$/", $address)) {
+            if (contains_invalid_characters($address)) {
+                $addressErr = "Adresē ir nederīgas rakstzīmes";
+            } elseif (preg_match("/^[0-9]+$/", $address)) {
                 $addressErr = "Adrese nevar būt tikai cipari";
             }
         }
