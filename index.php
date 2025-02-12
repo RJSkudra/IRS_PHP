@@ -144,11 +144,10 @@
             $stmt->bind_param("i", $id_to_delete);
 
             if ($stmt->execute()) {
-                echo "<div class='message success'>Ieraksts veiksmīgi dzēsts</div>";
-                header("Location: " . $_SERVER["PHP_SELF"] . "?deleted=true");
-                exit();
+            echo "<div class='message success'>Ieraksts veiksmīgi dzēsts</div>";
+            header("Location: " . $_SERVER["PHP_SELF"] . "?deleted=true");
             } else {
-                echo "<div class='message error-message'>Kļūda dzēšot ierakstu: " . $stmt->error . "</div>";
+            echo "<div class='message error-message'>Kļūda dzēšot ierakstu: " . $stmt->error . "</div>";
             }
 
             $stmt->close();
