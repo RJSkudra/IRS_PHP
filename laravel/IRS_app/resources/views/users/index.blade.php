@@ -21,9 +21,9 @@
         @if (session('success'))
              <div class="message success">{{ session('success') }}</div>
         @endif
+        <div class="form-grid">
         <form method="post" action="{{ route('users.store') }}">
              @csrf
-             <div class="form-grid">
                  <div class="form-group">
                      <label for="name">Vārds</label>
                      <input type="text" id="name" name="name" value="{{ old('name') }}">
@@ -47,12 +47,12 @@
                  <div class="button-group">
                      <input type="submit" value="Iesniegt" class="button submit-button">
                  </div>
-             </div>
         </form>
         <form method="post" action="{{ route('users.deleteAll') }}">
              @csrf
              <input type="submit" value="Dzēst visus ierakstus" class="button delete-all-button">
         </form>
+        </div>
         @if ($users->count())
              <h2>Lietotāju saraksts</h2>
              <table class="users-table">
