@@ -25,7 +25,7 @@ class UserController extends Controller
 
         User::create($request->all());
 
-        return redirect()->route('users.index')->with('success', 'Ieraksts veiksmīgi pievienots');
+        return redirect()->route('users.index')->with('success', __('messages.success.created'));
     }
 
     public function destroy(User $user)
