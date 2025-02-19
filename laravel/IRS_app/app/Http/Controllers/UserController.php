@@ -31,12 +31,12 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         $user->delete();
-        return redirect()->route('users.index')->with('success', 'Ieraksts veiksmīgi dzēsts');
+        return redirect()->route('users.index')->with('success', __('messages.success.deleted'));
     }
 
     public function deleteAll()
     {
         User::truncate();
-        return redirect()->route('users.index')->with('success', 'Visi ieraksti veiksmīgi dzēsti');
+        return redirect()->route('users.index')->with('success', __('messages.success.all_deleted'));
     }
 }
