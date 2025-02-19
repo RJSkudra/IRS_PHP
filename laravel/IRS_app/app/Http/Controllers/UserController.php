@@ -16,15 +16,14 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|regex:/^[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ\- ]{2,}$/u',
-            'surname' => 'required|regex:/^[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ\- ]{2,}$/u',
-            'age' => 'required|integer',
+            'name' => 'required|regex:/^[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ\- ]{2,50}$/u',
+            'surname' => 'required|regex:/^[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ\- ]{2,50}$/u',
+            'age' => 'required|integer|min:0',
             'phone' => 'required|regex:/^[0-9]{8}$/',
             'address' => 'required|regex:/^[a-zA-Z0-9\s,.,-]+$/u',
         ]);
 
         User::create($request->all());
-
         return redirect()->route('users.index')->with('success', __('messages.success.created'));
     }
 

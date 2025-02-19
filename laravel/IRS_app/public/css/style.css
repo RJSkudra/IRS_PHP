@@ -108,6 +108,10 @@ body {
     padding: 10px;
     border: 1px solid #ddd;
     text-align: left;
+    word-wrap: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 110px; /* Adjust the max-width as needed */
 }
 
 .users-table th {

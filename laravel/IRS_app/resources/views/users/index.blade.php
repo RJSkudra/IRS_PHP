@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IRS datu ievade</title>
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <style>
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
     <div class="form-container">
@@ -21,9 +29,9 @@
         @if (session('success'))
              <div class="message success">{{ session('success') }}</div>
         @endif
-        <div class="form-grid">
         <form method="post" action="{{ route('users.store') }}">
              @csrf
+             <div class="form-grid">
                  <div class="form-group">
                      <label for="name">Vārds</label>
                      <input type="text" id="name" name="name" value="{{ old('name') }}">
@@ -45,15 +53,20 @@
                      <input type="text" id="address" name="address" value="{{ old('address') }}">
                  </div>
                  <div class="button-group">
-                     <input type="submit" value="Iesniegt" class="button submit-button">
-                 </div>
-        </form>
-        <form method="post" action="{{ route('users.deleteAll') }}">
-             @csrf
-            <div class="button-group">
-                <input type="submit" value="Dzēst visus ierakstus" class="button delete-all-button">
+            <form method="post" action="{{ route('users.store') }}">
+                @csrf
+                <input type="submit" value="Iesniegt" class="button submit-button">
+            </form>
             </div>
+             </div>
         </form>
+        <div class="button-group">
+            @if ($users->count())
+                <form method="post" action="{{ route('users.deleteAll') }}">
+                    @csrf
+                    <input type="submit" value="Dzēst visus ierakstus" class="button delete-all-button">
+                </form>
+            @endif
         </div>
         @if ($users->count())
              <h2>Lietotāju saraksts</h2>
