@@ -18,7 +18,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|regex:/^[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ\- ]{2,50}$/u',
             'surname' => 'required|regex:/^[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ\- ]{2,50}$/u',
-            'age' => 'required|integer|min:0',
+            'age' => 'required|integer|min:0|max:200',
             'phone' => 'required|regex:/^[0-9]{8}$/',
             'address' => 'required|regex:/^[a-zA-Z0-9\s,.,-]+$/u',
         ]);

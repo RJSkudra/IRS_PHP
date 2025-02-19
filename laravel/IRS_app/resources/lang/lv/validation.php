@@ -16,6 +16,7 @@ return [
         'age' => [
             'required' => 'Vecuma lauks ir obligāts.',
             'integer' => 'Vecumam jābūt veselam skaitlim.',
+            'max' => 'Ievadītajai personai jābūt organiski dzīvai, nevis kaut kādam kiborgam.',
         ],
         'phone' => [
             'required' => 'Telefona numura lauks ir obligāts.',
