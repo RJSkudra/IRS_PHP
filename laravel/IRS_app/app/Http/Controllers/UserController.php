@@ -24,18 +24,18 @@ class UserController extends Controller
         ]);
 
         User::create($request->all());
-        return redirect()->route('users.index')->with('success', __('messages.success.created'));
+        return redirect()->route('users.index')->with('success', __('validation.success.created'));
     }
 
     public function destroy(User $user)
     {
         $user->delete();
-        return redirect()->route('users.index')->with('success', __('messages.success.deleted'));
+        return redirect()->route('users.index')->with('success', __('validation.success.deleted'));
     }
 
     public function deleteAll()
     {
         User::truncate();
-        return redirect()->route('users.index')->with('success', __('messages.success.all_deleted'));
+        return redirect()->route('users.index')->with('success', __('validation.success.all_deleted'));
     }
 }

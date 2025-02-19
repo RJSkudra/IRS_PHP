@@ -25,10 +25,10 @@ return [
             'required' => 'Adreses lauks ir obligāts.',
             'regex' => 'Adrese satur nederīgus simbolus.',
         ],
-        'success' => [
-            'created' => 'Ieraksts veiksmīgi pievienots',
-            'deleted' => 'Ieraksts veiksmīgi dzēsts',
-            'all_deleted' => 'Visi ieraksti veiksmīgi dzēsti'
-        ],
+    ],
+    'success' => [
+        'created' => 'Ieraksts veiksmīgi pievienots',
+        'deleted' => 'Ieraksts veiksmīgi dzēsts',
+        'all_deleted' => 'Visi ieraksti veiksmīgi dzēsti'
     ],
 ];
