@@ -97,20 +97,20 @@ body {
     font-size: 14px;
 }
 
-.users-table {
+.lietotaji_php-table {
     width: 100%;
     margin-top: 30px;
     border-collapse: collapse;
 }
 
-.users-table th,
-.users-table td {
+.lietotaji_php-table th,
+.lietotaji_php-table td {
     padding: 10px;
     border: 1px solid #ddd;
     text-align: left;
 }
 
-.users-table th {
+.lietotaji_php-table th {
     background-color: #f8f9fa;
 }
 

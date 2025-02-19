@@ -90,7 +90,7 @@
         }
 
         if (empty($nameErr) && empty($surnameErr) && empty($ageErr) && empty($phoneErr) && empty($addressErr) && isset($_POST["submit"])) {
-            $stmt = $conn->prepare("INSERT INTO users (name, surname, age, phone, address) VALUES (?, ?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO lietotaji_php (name, surname, age, phone, address) VALUES (?, ?, ?, ?, ?)");
             $stmt->bind_param("ssiss", $name, $surname, $age, $phone, $address);
 
             if ($stmt->execute()) {
@@ -105,7 +105,7 @@
         }
 
         if (isset($_POST["create_table"])) {
-            $sql = "CREATE TABLE IF NOT EXISTS users (
+            $sql = "CREATE TABLE IF NOT EXISTS lietotaji_php (
                 id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 name VARCHAR(30) NOT NULL,
                 surname VARCHAR(30) NOT NULL,
@@ -116,10 +116,10 @@
             )";
 
             if ($conn->query($sql) === TRUE) {
-                echo "<div class='message success'>Tabula 'users' veiksmīgi izveidota</div>";
+                echo "<div class='message success'>Tabula 'lietotaji_php' veiksmīgi izveidota</div>";
             } else {
                 if ($conn->errno == 1050) {
-                    echo "<div class='message error-message'>Tabula 'users' jau eksistē</div>";
+                    echo "<div class='message error-message'>Tabula 'lietotaji_php' jau eksistē</div>";
                 } else {
                     echo "<div class='message error-message'>Kļūda veidojot tabulu: " . $conn->error . "</div>";
                 }
@@ -127,7 +127,7 @@
         }
 
         if (isset($_POST["delete_all"])) {
-            $sql = "DELETE FROM users";
+            $sql = "DELETE FROM lietotaji_php";
 
             if ($conn->query($sql) === TRUE) {
                 echo "<div class='message success'>Visi ieraksti veiksmīgi dzēsti</div>";
@@ -140,7 +140,7 @@
 
         if (isset($_POST["delete"])) {
             $id_to_delete = $_POST["id"];
-            $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
+            $stmt = $conn->prepare("DELETE FROM lietotaji_php WHERE id = ?");
             $stmt->bind_param("i", $id_to_delete);
 
             if ($stmt->execute()) {
@@ -198,11 +198,11 @@
         </form>
 
         <?php
-        $result = $conn->query("SELECT * FROM users");
+        $result = $conn->query("SELECT * FROM lietotaji_php");
 
         if ($result && $result->num_rows > 0) {
             echo "<h2>Lietotāju saraksts</h2>";
-            echo "<table class='users-table'>
+            echo "<table class='lietotaji_php-table'>
                     <tr>
                         <th>ID</th>
                         <th>Vārds</th>
