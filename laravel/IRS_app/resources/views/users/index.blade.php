@@ -50,7 +50,9 @@
         </form>
         <form method="post" action="{{ route('users.deleteAll') }}">
              @csrf
-             <input type="submit" value="Dzēst visus ierakstus" class="button delete-all-button">
+            <div class="button-group">
+                <input type="submit" value="Dzēst visus ierakstus" class="button delete-all-button">
+            </div>
         </form>
         </div>
         @if ($users->count())
