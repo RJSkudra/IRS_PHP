@@ -11,7 +11,7 @@ body {
 }
 
 .form-container {
-    max-width: 800px;
+    max-width: 50%;
     margin: 20px auto;
     padding: 30px;
     background-color: white;
