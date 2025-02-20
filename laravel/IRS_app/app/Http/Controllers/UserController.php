@@ -20,7 +20,7 @@ class UserController extends Controller
             'surname' => 'required|regex:/^[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ\- ]{2,50}$/u',
             'age' => 'required|integer|min:0|max:200',
             'phone' => 'required|regex:/^[0-9]{8}$/',
-            'address' => 'required|regex:/^[a-zA-Z0-9\s,.,-]+$/u',
+            'address' => 'required|regex:/^(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9\s,.,-āĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ]+$/u',
         ]);
 
         User::create($request->all());
