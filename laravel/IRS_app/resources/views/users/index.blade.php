@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>IRS datu ievade</title>
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
     <link rel="icon" href="https://img.icons8.com/ultraviolet/80/data-configuration.png" type="image/png">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ asset('js/validation.js') }}" defer></script>
+    <script src="{{ asset('js/ajax.js') }}" defer></script>
 </head>
 <body>
     <div class="form-container">
@@ -13,12 +17,13 @@
         @if (session('success'))
             <div class="message success">{{ session('success') }}</div>
         @endif
-        <form method="post" action="{{ route('users.store') }}">
+        <form id="userForm" method="post" action="{{ route('users.store') }}" onsubmit="return false;">
             @csrf
             <div class="form-grid">
                 <div class="form-group">
                     <label for="name">Vārds</label>
                     <input type="text" id="name" name="name" value="{{ old('name') }}">
+                    <div class="error-message" id="name-error"></div>
                     @error('name')
                         <div class="error-message">{{ $message }}</div>
                     @enderror
@@ -26,6 +31,7 @@
                 <div class="form-group">
                     <label for="surname">Uzvārds</label>
                     <input type="text" id="surname" name="surname" value="{{ old('surname') }}">
+                    <div class="error-message" id="surname-error"></div>
                     @error('surname')
                         <div class="error-message">{{ $message }}</div>
                     @enderror
@@ -33,6 +39,7 @@
                 <div class="form-group">
                     <label for="age">Vecums</label>
                     <input type="text" id="age" name="age" value="{{ old('age') }}">
+                    <div class="error-message" id="age-error"></div>
                     @error('age')
                         <div class="error-message">{{ $message }}</div>
                     @enderror
@@ -40,6 +47,7 @@
                 <div class="form-group">
                     <label for="phone">Telefona nr.</label>
                     <input type="tel" id="phone" name="phone" value="{{ old('phone') }}">
+                    <div class="error-message" id="phone-error"></div>
                     @error('phone')
                         <div class="error-message">{{ $message }}</div>
                     @enderror
@@ -47,26 +55,31 @@
                 <div class="form-group full-width">
                     <label for="address">Adrese</label>
                     <input type="text" id="address" name="address" value="{{ old('address') }}">
+                    <div class="error-message" id="address-error"></div>
                     @error('address')
                         <div class="error-message">{{ $message }}</div>
                     @enderror
                 </div>
             </div>
             <div class="button-group">
-                <input type="submit" value="Iesniegt" class="button submit-button">
+                <input type="submit" value="Iesniegt" class="button submit-button" disabled onclick="submitForm()">
             </div>
         </form>
-        @if ($users->count())
-            <div class="button-group">
-                <form method="post" action="{{ route('users.deleteAll') }}">
-                    @csrf
-                    <input type="submit" value="Dzēst visus ierakstus" class="button delete-all-button">
-                </form>
-            </div>
-        @endif
-        @if ($users->count())
-            <h2>Lietotāju saraksts</h2>
-            <table class="users-table">
+
+
+
+        <!-- Always include the delete-all button, but control visibility with CSS -->
+        <div class="button-group" id="deleteAllContainer" style="display: none;">
+            <form id="deleteAllForm" method="post" action="{{ route('users.deleteAll') }}" onsubmit="return false;">
+                @csrf
+                <input type="submit" value="Dzēst visus ierakstus" class="button delete-all-button" onclick="deleteAllEntries()">
+            </form>
+        </div>
+        
+        <!-- Always include the table heading and structure, but control visibility with CSS -->
+        <h2 id="tableHeading" style="display: none;">Lietotāju saraksts</h2>
+        <table class="users-table" id="usersTable" style="display: none;">
+            <thead>
                 <tr>
                     <th>ID</th>
                     <th>Vārds</th>
@@ -77,26 +90,32 @@
                     <th>Reģistrācijas datums</th>
                     <th>Darbība</th>
                 </tr>
-                @foreach ($users as $user)
-                    <tr>
-                        <td>{{ $user->id }}</td>
-                        <td>{{ $user->name }}</td>
-                        <td>{{ $user->surname }}</td>
-                        <td>{{ $user->age }}</td>
-                        <td>{{ $user->phone }}</td>
-                        <td>{{ $user->address }}</td>
-                        <td>{{ $user->created_at }}</td>
-                        <td>
-                            <form method="post" action="{{ route('users.destroy', $user) }}">
-                                @csrf
-                                <input type="hidden" name="_method" value="DELETE">
-                                <input type="submit" value="Dzēst" class="button delete-button">
-                            </form>
-                        </td>
-                    </tr>
-                @endforeach
-            </table>
-        @endif
+            </thead>
+            <tbody id="usersTableBody">
+                @if ($usersCount > 0)
+                    @foreach ($users as $user)
+                        <tr>
+                            <td>{{ $user->id }}</td>
+                            <td>{{ $user->name }}</td>
+                            <td>{{ $user->surname }}</td>
+                            <td>{{ $user->age }}</td>
+                            <td>{{ $user->phone }}</td>
+                            <td>{{ $user->address }}</td>
+                            <td>{{ $user->created_at }}</td>
+                            <td>
+                                <form method="post" action="{{ route('users.destroy', $user->id) }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <input type="submit" value="Dzēst" class="button delete-button">
+                                </form>
+                            </td>
+                        </tr>
+                    @endforeach
+                @endif
+                <!-- Table body will be dynamically inserted here -->
+            </tbody>
+        </table>
+
         <div class="footer">
             IRS™ © ® 2025
         </div>

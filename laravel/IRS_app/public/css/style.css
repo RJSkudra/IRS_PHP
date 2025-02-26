@@ -140,3 +140,7 @@ body {
     color: crimson;
     font-size: 12px;
 }
+.submit-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}

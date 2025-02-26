@@ -5,5 +5,36 @@ use App\Http\Controllers\UserController;
 
 Route::get('/', [UserController::class, 'index'])->name('users.index');
 Route::post('/store', [UserController::class, 'store'])->name('users.store');
-Route::delete('/delete/{user}', [UserController::class, 'destroy'])->name('users.destroy'); // Change POST to DELETE
+Route::delete('/delete/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 Route::post('/delete-all', [UserController::class, 'deleteAll'])->name('users.deleteAll');
+
+Route::get('/validation-messages', function () {
+    return response()->json([
+        'custom' => [
+            'name' => [
+                'required' => __('validation.custom.name.required'),
+                'regex' => __('validation.custom.name.regex'),
+                'length' => __('validation.custom.name.length'),
+            ],
+            'surname' => [
+                'required' => __('validation.custom.surname.required'),
+                'regex' => __('validation.custom.surname.regex'),
+                'length' => __('validation.custom.surname.length'),
+            ],
+            'age' => [
+                'required' => __('validation.custom.age.required'),
+                'integer' => __('validation.custom.age.integer'),
+                'min' => __('validation.custom.age.min'),
+                'max' => __('validation.custom.age.max'),
+            ],
+            'phone' => [
+                'required' => __('validation.custom.phone.required'),
+                'regex' => __('validation.custom.phone.regex'),
+            ],
+            'address' => [
+                'required' => __('validation.custom.address.required'),
+                'regex' => __('validation.custom.address.regex'),
+            ],
+        ]
+    ]);
+});
