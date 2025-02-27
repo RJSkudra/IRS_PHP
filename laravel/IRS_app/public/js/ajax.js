@@ -112,6 +112,21 @@ function deleteAllEntries() {
     });
 }
 
+let lastId = null;
+
+function updateView() {
+    $.get("/latest-entry-id", function(response) {
+        if (response.latestId !== lastId) {
+            // New entry in DB, refresh the table
+            lastId = response.latestId;
+            refreshTable();
+        }
+    });
+}
+
+// Poll the server every 10 seconds
+setInterval(updateView, 10000);
+
 function refreshTable() {
     $.ajax({
         url: window.location.href,

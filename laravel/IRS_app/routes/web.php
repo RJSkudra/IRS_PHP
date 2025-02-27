@@ -8,6 +8,11 @@ Route::post('/store', [UserController::class, 'store'])->name('users.store');
 Route::delete('/delete/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 Route::post('/delete-all', [UserController::class, 'deleteAll'])->name('users.deleteAll');
 
+Route::get('/latest-entry-id', function () {
+    $latestEntry = \App\Models\User::latest()->first();
+    return response()->json(['latestId' => $latestEntry ? $latestEntry->id : null]);
+});
+
 Route::get('/validation-messages', function () {
     return response()->json([
         'custom' => [
