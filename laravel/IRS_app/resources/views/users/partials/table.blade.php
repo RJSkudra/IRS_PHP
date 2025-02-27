@@ -1,4 +1,3 @@
-<tbody id="usersTableBody">
     @foreach ($users as $user)
         <tr>
             <td>{{ $user->id }}</td>
@@ -17,4 +16,3 @@
             </td>
         </tr>
     @endforeach
-</tbody>

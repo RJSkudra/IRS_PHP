@@ -115,9 +115,11 @@ function deleteAllEntries() {
 let lastId = null;
 
 function updateView() {
+    console.log("Checking for new entries");
     $.get("/latest-entry-id", function(response) {
         if (response.latestId !== lastId) {
             // New entry in DB, refresh the table
+            console.log("Entry found! Refreshing table");
             lastId = response.latestId;
             refreshTable();
         }
@@ -137,53 +139,6 @@ function refreshTable() {
         success: function(response) {
             console.log("Table refresh response:", response.substring(0, 200) + "...");
             $("#usersTableBody").html(response);
-            // Create a temporary div to parse the HTML response
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = response;
-            
-            // First check if the response contains the tbody ID
-            if (response.includes('id="usersTableBody"')) {
-                // Try to find the table body in the parsed HTML
-                const tbody = tempDiv.querySelector('#usersTableBody');
-                
-                if (tbody) {
-                    // A tbody was found in the response, replace the existing one
-                    const existingTbody = document.querySelector('#usersTableBody');
-                    if (existingTbody) {
-                        existingTbody.outerHTML = tbody.outerHTML;
-                        console.log("Table body replaced successfully");
-                    } else {
-                        // If no tbody exists, append to table
-                        const table = document.querySelector('.users-table');
-                        if (table) {
-                            table.appendChild(tbody);
-                            console.log("Table body added successfully");
-                        }
-                    }
-                } else {
-                    // Extract tbody directly from string since querySelector might fail on empty tbody
-                    const tbodyMatch = response.match(/<tbody id="usersTableBody">([\s\S]*?)<\/tbody>/);
-                    if (tbodyMatch) {
-                        const tbodyHtml = tbodyMatch[0];
-                        const existingTbody = document.querySelector('#usersTableBody');
-                        
-                        if (existingTbody) {
-                            existingTbody.outerHTML = tbodyHtml;
-                            console.log("Table body replaced using regex extraction");
-                        } else {
-                            const table = document.querySelector('.users-table');
-                            if (table) {
-                                table.innerHTML += tbodyHtml;
-                                console.log("Table body added using regex extraction");
-                            }
-                        }
-                    }
-                }
-            } else {
-                console.warn("No usersTableBody element found in response");
-            }
-
-            // Update table visibility
             toggleTableVisibility();
         },
         error: function(response) {
@@ -225,4 +180,5 @@ $(document).on('click', '.delete-button', function(e) {
 $(document).ready(function() {
     // Initial check for table visibility
     toggleTableVisibility();
+    refreshTable()
 });
