@@ -56,9 +56,10 @@ function validateSurname() {
 function validateAge() {
     const age = document.getElementById('age').value;
     const ageError = document.getElementById('age-error');
+    const agePattern = /^(0|[1-9]\d*)$/;
     if (age.trim() === '') {
         ageError.innerText = touchedFields['age'] ? validationMessages.custom.age.required : '';
-    } else if (isNaN(age)) {
+    } else if (!agePattern.test(age)) {
         ageError.innerText = touchedFields['age'] ? validationMessages.custom.age.integer : '';
     } else if (age < 0) {
         ageError.innerText = touchedFields['age'] ? validationMessages.custom.age.min : '';
@@ -85,7 +86,7 @@ function validatePhone() {
 function validateAddress() {
     const address = document.getElementById('address').value;
     const addressError = document.getElementById('address-error');
-    const addressPattern = /^(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9\s,.,-āĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ]+$/u;
+    const addressPattern = /^(?=.*[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ])(?=.*[0-9])[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ0-9\s,.-]+$/u;
     if (address.trim() === '') {
         addressError.innerText = touchedFields['address'] ? validationMessages.custom.address.required : '';
     } else if (!addressPattern.test(address)) {
