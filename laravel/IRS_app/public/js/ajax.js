@@ -1,3 +1,4 @@
+// iesūta ievadītos datus
 function submitForm() {
     $.ajax({
         url: $("#userForm").attr('action'),
@@ -7,13 +8,11 @@ function submitForm() {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         },
         success: function(response) {
-            // Clear form inputs
             $("#userForm")[0].reset();
             
-            // Reset validation states
             $(".error-message").empty();
             
-            // Disable submit button and reset its style
+            // Pēc veiksmīgas datu iesniegšanas padara iesniegšanas pogu neatkīvu
             const submitButton = $(".submit-button");
             submitButton.prop("disabled", true);
             submitButton.css({
@@ -21,18 +20,15 @@ function submitForm() {
                 "cursor": "not-allowed"
             });
             
-            // Show success message
             const messageDiv = $("<div>").addClass("message success").text(response.success);
             $(".form-container").prepend(messageDiv);
             
-            // Auto-remove message after 3 seconds
             setTimeout(function() {
                 messageDiv.fadeOut(500, function() {
                     $(this).remove();
                 });
             }, 3000);
             
-            // Refresh table with latest data
             refreshTable();
         },
         error: function(response) {
@@ -40,50 +36,49 @@ function submitForm() {
         }
     });
 }
-
+// funkcija, kas dzēš ierakstu pēc id priekš dzēšanas pogas
+// izmanto POST, lai sūtītu laravel pieprasījumu dzēst konkrētu ID
+// delete route ir definēts web.php failā
 function deleteEntry(id) {
     $.ajax({
         url: `/delete/${id}`,
         type: "POST",
         data: {
             "_token": $('meta[name="csrf-token"]').attr('content'),
-            "_method": "DELETE" // Laravel uses this to simulate DELETE method
+            "_method": "DELETE" 
         },
         success: function(response) {
-            // Show success message
+
             const messageDiv = $("<div>").addClass("message success").text(response.success);
             $(".form-container").prepend(messageDiv);
             
-            // Auto-remove message after 3 seconds
+
             setTimeout(function() {
                 messageDiv.fadeOut(500, function() {
                     $(this).remove();
                 });
             }, 3000);
             
-            // Refresh table
             refreshTable();
         },
         error: function(response) {
             console.error("Error deleting entry:", response);
             
-            // Show error message
             const messageDiv = $("<div>").addClass("message error").text("Error deleting entry");
             $(".form-container").prepend(messageDiv);
             
-            // Auto-remove message after 3 seconds
             setTimeout(function() {
                 messageDiv.fadeOut(500, function() {
                     $(this).remove();
                 });
             }, 3000);
-            
-            // Still refresh the table in case the deletion actually succeeded
             refreshTable();
         }
     });
 }
-
+// dzēš visus ierakstus ar vienu pogu
+// izmanto POST, lai sūtītu laravel pieprasījumu dzēst visus ierakstus
+// delete route ir definēts web.php failā
 function deleteAllEntries() {
     $.ajax({
         url: $("#deleteAllForm").attr('action'),
@@ -91,18 +86,13 @@ function deleteAllEntries() {
         data: $("#deleteAllForm").serialize(),
         success: function(response) {
             if (response.success) {
-                // Show success message
                 const messageDiv = $("<div>").addClass("message success").text(response.success);
                 $(".form-container").prepend(messageDiv);
-                
-                // Auto-remove message after 3 seconds
                 setTimeout(function() {
                     messageDiv.fadeOut(500, function() {
                         $(this).remove();
                     });
                 }, 3000);
-                
-                // Refresh table
                 refreshTable();
             }
         },
@@ -113,12 +103,11 @@ function deleteAllEntries() {
 }
 
 let lastId = null;
-
+// automātiski atjauno tabulu, ja kāds cits ir pievienojis jaunu ierakstu
 function updateView() {
     console.log("Checking for new entries");
     $.get("/latest-entry-id", function(response) {
         if (response.latestId !== lastId) {
-            // New entry in DB, refresh the table
             console.log("Entry found! Refreshing table");
             lastId = response.latestId;
             refreshTable();
@@ -126,7 +115,7 @@ function updateView() {
     });
 }
 
-// Poll the server every 10 seconds
+// Atjauno tabulu ik pēc 10 sekundēm
 setInterval(updateView, 10000);
 
 function refreshTable() {
@@ -138,6 +127,7 @@ function refreshTable() {
         },
         success: function(response) {
             console.log("Table refresh response:", response.substring(0, 200) + "...");
+            // Ievieto table.blade.php lapas HTML
             $("#usersTableBody").html(response);
             toggleTableVisibility();
         },
@@ -146,7 +136,7 @@ function refreshTable() {
         }
     });
 }
-
+// parbauda vai tabula ir tukša, ja ir, tad paslēpj to
 function toggleTableVisibility() {
     const tableBody = document.querySelector('#usersTableBody');
     const rows = tableBody ? tableBody.querySelectorAll('tr') : [];
@@ -167,7 +157,7 @@ function toggleTableVisibility() {
     }
 }
 
-// Event delegation for delete buttons
+
 $(document).on('click', '.delete-button', function(e) {
     e.preventDefault();
     const form = $(this).closest('form');
@@ -176,9 +166,8 @@ $(document).on('click', '.delete-button', function(e) {
 
     deleteEntry(id);
 });
-
+// paslēpj tabulu, ja tā ir tukša un atvērs to, ja tajā ir ieraksti
 $(document).ready(function() {
-    // Initial check for table visibility
     toggleTableVisibility();
     refreshTable()
 });

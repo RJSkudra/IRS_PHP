@@ -66,9 +66,6 @@
             </div>
         </form>
 
-
-
-        <!-- Always include the delete-all button, but control visibility with CSS -->
         <div class="button-group" id="deleteAllContainer" style="display: none;">
             <form id="deleteAllForm" method="post" action="{{ route('users.deleteAll') }}" onsubmit="return false;">
                 @csrf
@@ -76,7 +73,6 @@
             </form>
         </div>
         
-        <!-- Always include the table heading and structure, but control visibility with CSS -->
         <h2 id="tableHeading" style="display: none;">Lietotāju saraksts</h2>
         <table class="users-table" id="usersTable" style="display: none;">
             <thead>
@@ -93,7 +89,7 @@
             </thead>
             <tbody id="usersTableBody">
 
-                <!-- Table body will be dynamically inserted here -->
+                <!-- table.blade.php saturs būs dinamiski ievadīts šeit -->
             </tbody>
         </table>
 

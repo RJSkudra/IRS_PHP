@@ -14,8 +14,7 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
-    'locale' => env('APP_LOCALE', 'lv'),
-    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment
