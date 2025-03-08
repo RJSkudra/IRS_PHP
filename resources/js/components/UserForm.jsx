@@ -13,6 +13,7 @@ const FormValidation = () => {
     });
 
     const [errors, setErrors] = useState({});
+    const [touched, setTouched] = useState({});
     const [entries, setEntries] = useState([]);
     const [lastId, setLastId] = useState(null);
     const [darkMode, setDarkMode] = useState(() => {
@@ -117,6 +118,12 @@ const FormValidation = () => {
             [name]: value
         });
 
+        // Mark the field as touched
+        setTouched({
+            ...touched,
+            [name]: true
+        });
+
         // Validate the field as soon as its value changes
         const error = validateField(name, value);
         setErrors({
@@ -198,28 +205,48 @@ const FormValidation = () => {
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
                     <label>Name:</label>
+                    {touched.name && (errors.name ? (
+                        <span className="error">{errors.name} <span style={{ color: 'red' }}>✗</span></span>
+                    ) : (
+                        <span style={{ color: 'green' }}>✓</span>
+                    ))}
                     <input type="text" name="name" value={formData.name} onChange={handleChange} />
-                    {errors.name && <span className="error">{errors.name}</span>}
                 </div>
                 <div className="form-group">
                     <label>Surname:</label>
+                    {touched.surname && (errors.surname ? (
+                        <span className="error">{errors.surname} <span style={{ color: 'red' }}>✗</span></span>
+                    ) : (
+                        <span style={{ color: 'green' }}>✓</span>
+                    ))}
                     <input type="text" name="surname" value={formData.surname} onChange={handleChange} />
-                    {errors.surname && <span className="error">{errors.surname}</span>}
                 </div>
                 <div className="form-group">
                     <label>Age:</label>
+                    {touched.age && (errors.age ? (
+                        <span className="error">{errors.age} <span style={{ color: 'red' }}>✗</span></span>
+                    ) : (
+                        <span style={{ color: 'green' }}>✓</span>
+                    ))}
                     <input type="text" name="age" value={formData.age} onChange={handleChange} />
-                    {errors.age && <span className="error">{errors.age}</span>}
                 </div>
                 <div className="form-group">
                     <label>Phone:</label>
+                    {touched.phone && (errors.phone ? (
+                        <span className="error">{errors.phone} <span style={{ color: 'red' }}>✗</span></span>
+                    ) : (
+                        <span style={{ color: 'green' }}>✓</span>
+                    ))}
                     <input type="text" name="phone" value={formData.phone} onChange={handleChange} />
-                    {errors.phone && <span className="error">{errors.phone}</span>}
                 </div>
                 <div className="form-group">
                     <label>Address:</label>
+                    {touched.address && (errors.address ? (
+                        <span className="error">{errors.address} <span style={{ color: 'red' }}>✗</span></span>
+                    ) : (
+                        <span style={{ color: 'green' }}>✓</span>
+                    ))}
                     <input type="text" name="address" value={formData.address} onChange={handleChange} />
-                    {errors.address && <span className="error">{errors.address}</span>}
                 </div>
                 <button type="submit" className="button submit-button">Submit</button>
             </form>
