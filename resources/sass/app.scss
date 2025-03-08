@@ -252,7 +252,6 @@ body {
     gap: 10px;
     opacity: 1;
     transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
-    animation: fadeOut 2s forwards;
 
     &.success {
         background-color: #d4edda;
@@ -287,10 +286,11 @@ body {
             background-color: #3498db;
             transform: scaleX(0);
             transform-origin: left;
-            animation: fill 2.4s linear forwards;
+            animation: fill 2.4s linear infinite;
         }
     }
 }
+
 .close-button {
     background: none;
     border: none;

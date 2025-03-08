@@ -21,12 +21,21 @@ const MessageQueue = ({ messages, removeMessage }) => {
         return () => timers.forEach(timer => clearTimeout(timer));
     }, [visibleMessages, removeMessage]);
 
+    const handleRemoveMessage = (index) => {
+        setVisibleMessages((prevMessages) => {
+            const newMessages = [...prevMessages];
+            newMessages[index] = { ...newMessages[index], fadeOut: true };
+            return newMessages;
+        });
+        setTimeout(() => removeMessage(index), 300); // Delay removal from parent state to allow CSS transition
+    };
+
     return (
         <div className="message-container">
             {visibleMessages.map((message, index) => (
                 <div key={index} className={`message ${message.type} ${message.fadeOut ? 'fade-out' : ''}`}>
                     {message.text}
-                    <button onClick={() => removeMessage(index)} className="close-button">x</button>
+                    <button onClick={() => handleRemoveMessage(index)} className="close-button">x</button>
                 </div>
             ))}
         </div>
