@@ -1,8 +1,15 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import laravel from 'laravel-vite-plugin';
 
 export default defineConfig({
-    plugins: [react()],
+    plugins: [
+        laravel({
+            input: ['resources/sass/app.scss', 'resources/js/app.jsx'],
+            refresh: true,
+        }),
+        react()
+    ],
     server: {
         cors: {
             origin: '*', // Allow all origins

@@ -1,8 +1,173 @@
+// Variables
+@use 'variables' as vars;
+
+// Bootstrap (if you still need it)
+@use 'bootstrap/scss/bootstrap' as bs;
+
+// Tailwind CSS
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 // Fonts
 @import url('https://fonts.bunny.net/css?family=Nunito');
 
-// Variables
-@import 'variables';
+// Global styles
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
-// Bootstrap
-@import 'bootstrap/scss/bootstrap';
+body {
+    font-family: vars.$font-family;
+    background-color: vars.$background-color;
+    padding: 20px;
+}
+
+// Form container
+.form-container {
+    max-width: 50%;
+    margin: 20px auto;
+    padding: 30px;
+    background-color: vars.$white;
+    border: 1px solid vars.$border-color;
+    border-radius: 8px;
+    box-shadow: vars.$box-shadow;
+}
+
+// Form title
+.form-title {
+    text-align: center;
+    margin-bottom: 30px;
+    color: vars.$text-color;
+    font-size: 24px;
+}
+
+// Form grid
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+// Form group
+.form-group {
+    margin-bottom: 15px;
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+        color: vars.$label-color;
+        font-size: 14px;
+    }
+
+    input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid vars.$input-border-color;
+        border-radius: 4px;
+        font-size: 16px;
+    }
+
+    &.full-width {
+        grid-column: 1 / -1;
+    }
+}
+
+// Error message
+.error {
+    color: vars.$error-color;
+    font-size: 12px;
+    margin-top: 5px;
+    display: block;
+}
+
+// Button group
+.button-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+// Button styles
+.button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+
+    &.submit-button {
+        background-color: vars.$button-bg-color;
+        color: vars.$white;
+    }
+
+    &.create-table-button {
+        background-color: vars.$button-bg-color-success;
+        color: vars.$white;
+    }
+
+    &.delete-button {
+        background-color: vars.$button-bg-color-danger;
+        color: vars.$white;
+        padding: 5px 10px;
+        font-size: 14px;
+    }
+
+    &:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+}
+
+// Users table
+.users-table {
+    width: 100%;
+    margin-top: 30px;
+    border-collapse: collapse;
+
+    th,
+    td {
+        padding: 10px;
+        border: 1px solid vars.$border-color;
+        text-align: left;
+        word-wrap: break-word;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 110px; // Adjust the max-width as needed
+    }
+
+    th {
+        background-color: vars.$table-header-bg-color;
+    }
+}
+
+// Footer
+.footer {
+    text-align: center;
+    margin-top: 20px;
+    color: vars.$footer-color;
+    font-size: vars.$footer-font-size;
+}
+
+// Message styles
+.message {
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 4px;
+    text-align: center;
+
+    &.success {
+        background-color: vars.$message-bg-color-success;
+        color: vars.$message-text-color-success;
+    }
+
+    &.error-message {
+        background-color: vars.$message-bg-color-error;
+        color: vars.$message-text-color-error;
+        font-size: 12px;
+    }
+}
