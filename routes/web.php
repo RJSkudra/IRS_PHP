@@ -2,12 +2,14 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\EntryController;
 
 Route::get('/', [UserController::class, 'index'])->name('users.index');
 Route::post('/store', [UserController::class, 'store'])->name('users.store');
 Route::delete('/delete/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 Route::post('/delete-all', [UserController::class, 'deleteAll'])->name('users.deleteAll');
 Route::get('/api/entries', [UserController::class, 'getEntries']);
+Route::post('api/update-entries', [UserController::class, 'updateEntries']);
 Route::get('/latest-entry-id', function () {
     $latestEntry = \App\Models\User::latest()->first();
     return response()->json(['latestId' => $latestEntry ? $latestEntry->id : null]);

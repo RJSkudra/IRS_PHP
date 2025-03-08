@@ -25,6 +25,7 @@ const DetailedView = ({ onClose, entries }) => {
             const response = await axios.post('/api/update-entries', { entries: sortedEntries });
             if (response.status === 200) {
                 alert('Entries updated successfully');
+                setOriginalEntries(sortedEntries); // Update originalEntries only if save is successful
             } else {
                 console.error('Unexpected response:', response);
                 alert('Unexpected response from the server');

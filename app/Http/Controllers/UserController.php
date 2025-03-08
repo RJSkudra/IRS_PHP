@@ -53,6 +53,20 @@ class UserController extends Controller
         
         return redirect()->route('users.index')->with('success', __('validation.success.all_deleted'));
     }
+    
+    public function updateEntries(Request $request)
+    {
+        $entries = $request->input('entries');
+        
+        foreach ($entries as $entryData) {
+            $entry = User::find($entryData['id']);
+            if ($entry) {
+                $entry->update($entryData);
+            }
+        }
+
+        return response()->json(['message' => __('entryEdit.success.created')], 200);
+    }
 
     public function destroy(User $user)
     {
