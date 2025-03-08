@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../../sass/app.scss'; // Ensure the SCSS file is imported
 import FormComponent from './FormComponent';
@@ -199,6 +199,7 @@ const FormValidation = () => {
                 handleChange={handleChange}
                 handleSubmit={handleSubmit}
                 isFormValid={isFormValid}
+                handleDeleteAll={handleDeleteAll}
             />
             {entries.length > 0 && (
                 <TableComponent

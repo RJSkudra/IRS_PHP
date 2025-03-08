@@ -50,10 +50,51 @@ body {
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 24px;
+    gap: 20px;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
 // Form group
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full-width {
+    grid-column: span 2;
+}
+
+// Button group
+.button-group {
+    display: flex;
+    justify-content: space-between;
+}
+
+// Button styles
+.button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.submit-button {
+    background-color: #007bff;
+    color: white;
+}
+
+.delete-button {
+    background-color: #dc3545;
+    color: white;
+}
+
+.error {
+    color: red;
+    font-size: 12px;
+}
+
+// Form group styles
 .form-group {
     margin-bottom: 24px;
     display: flex;
@@ -100,78 +141,6 @@ body {
     margin-top: 6px;
     display: block;
     font-weight: 500;
-}
-
-// Button group
-.button-group {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin-top: 32px;
-}
-
-// Button styles
-.button {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 15px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-
-    &.submit-button {
-        background-color: #4a90e2;
-        color: white;
-
-        &:hover {
-            background-color: #3d7ec9;
-            transform: translateY(-1px);
-        }
-
-        &:active {
-            transform: translateY(1px);
-        }
-    }
-
-    &.create-table-button {
-        background-color: #42b883;
-        color: white;
-
-        &:hover {
-            background-color: #389e70;
-            transform: translateY(-1px);
-        }
-    }
-
-    &.delete-button {
-        background-color: #e53935;
-        color: white;
-        padding: 8px 16px;
-        font-size: 14px;
-
-        &:hover {
-            background-color: #d32f2f;
-            transform: translateY(-1px);
-        }
-    }
-
-    &.toggle-button {
-        background-color: #6c757d;
-        color: white;
-
-        &:hover {
-            background-color: #5a6268;
-        }
-    }
-
-    &:disabled {
-        background-color: #e0e0e0;
-        color: #9e9e9e;
-        cursor: not-allowed;
-        box-shadow: none;
-    }
 }
 
 // Users table
