@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import '../../sass/app.scss'; // Ensure the SCSS file is imported
 
 const FormValidation = () => {
+    // Initialize darkMode state from localStorage or default to false
     const [formData, setFormData] = useState({
         name: '',
         surname: '',
@@ -13,13 +15,41 @@ const FormValidation = () => {
     const [errors, setErrors] = useState({});
     const [entries, setEntries] = useState([]);
     const [lastId, setLastId] = useState(null);
-    const [darkMode, setDarkMode] = useState(false);
+    const [darkMode, setDarkMode] = useState(() => {
+        // Check localStorage for saved preference
+        const savedMode = localStorage.getItem('darkMode');
+        return savedMode === 'true';
+    });
 
     useEffect(() => {
         fetchEntries();
         const interval = setInterval(checkForNewEntries, 10000); // Check for new entries every 10 seconds
         return () => clearInterval(interval); // Cleanup interval on component unmount
     }, []);
+
+    // Add this useEffect to apply dark mode and save preference
+    useEffect(() => {
+        // Apply dark mode to the entire page
+        if (darkMode) {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+        
+        // Save preference to localStorage
+        localStorage.setItem('darkMode', darkMode);
+        
+        // Clean up function to remove class when component unmounts
+        return () => {
+            document.body.classList.remove('dark-mode');
+        };
+    }, [darkMode]);
+    
+    // Rest of your component code...
+
+    const toggleDarkMode = () => {
+        setDarkMode(!darkMode);
+    };
 
     const fetchEntries = async () => {
         try {
@@ -158,10 +188,6 @@ const FormValidation = () => {
                 console.error('Error submitting form:', error);
             }
         }
-    };
-
-    const toggleDarkMode = () => {
-        setDarkMode(!darkMode);
     };
 
     return (
