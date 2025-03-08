@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import io from 'socket.io-client';
 import '../../sass/app.scss'; // Ensure the SCSS file is imported
 import FormComponent from './FormComponent';
 import TableComponent from './TableComponent';
 import DetailedView from './DetailedView';
 import validationMessages from '../../lang/lv/validationMessages';
 import MessageQueue from './MessageQueue';
+
+const socket = io('http://localhost:4000'); // Connect to the server
 
 const UserForm = () => {
     const [formData, setFormData] = useState({
@@ -28,12 +31,27 @@ const UserForm = () => {
     const [messageQueue, setMessageQueue] = useState([]);
     const [showDetailedView, setShowDetailedView] = useState(false);
     const [totalEntries, setTotalEntries] = useState(0);
+    const [isEditing, setIsEditing] = useState(false); // New state variable
 
     useEffect(() => {
-        fetchEntries();
-        const interval = setInterval(checkForNewEntries, 10000);
-        return () => clearInterval(interval);
+        socket.on('entriesUpdated', (updatedEntries) => {
+            setEntries(updatedEntries);
+            setTotalEntries(updatedEntries.length);
+            if (updatedEntries.length > 0) {
+                setLastId(updatedEntries[updatedEntries.length - 1].id);
+            }
+        });
+
+        return () => {
+            socket.off('entriesUpdated');
+        };
     }, []);
+
+    useEffect(() => {
+        if (!isEditing) {
+            fetchEntries();
+        }
+    }, [isEditing]);
 
     useEffect(() => {
         if (darkMode) {
@@ -65,17 +83,6 @@ const UserForm = () => {
             }
         } catch (error) {
             console.error('Error fetching entries:', error);
-        }
-    };
-
-    const checkForNewEntries = async () => {
-        try {
-            const response = await axios.get('/latest-entry-id');
-            if (response.data.latestId !== lastId) {
-                fetchEntries();
-            }
-        } catch (error) {
-            console.error('Error checking for new entries:', error);
         }
     };
 
@@ -192,10 +199,9 @@ const UserForm = () => {
     };
 
     return (
-        <div className={darkMode ? 'dark' : ''}>
-            {showDetailedView && <div className="overlay"></div>}
+        <div className={`user-form ${darkMode ? 'dark-mode' : ''}`}>
             {showDetailedView && (
-                <DetailedView onClose={() => setShowDetailedView(false)} entries={entries} />
+                <DetailedView onClose={() => setShowDetailedView(false)} entries={entries} setIsEditing={setIsEditing} />
             )}
             <MessageQueue messages={messageQueue} removeMessage={removeMessage} />
             <button onClick={toggleDarkMode} className="button toggle-button" style={{ zIndex: 1003 }}>

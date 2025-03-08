@@ -16,7 +16,7 @@ const MessageQueue = ({ messages, removeMessage }) => {
                     return newMessages;
                 });
                 setTimeout(() => removeMessage(index), 300); // Delay removal from parent state to allow CSS transition
-            }, 1500)
+            }, 3000)
         );
         return () => timers.forEach(timer => clearTimeout(timer));
     }, [visibleMessages, removeMessage]);
@@ -31,7 +31,7 @@ const MessageQueue = ({ messages, removeMessage }) => {
     };
 
     return (
-        <div className="message-container">
+        <div className="message-container bottom-right">
             {visibleMessages.map((message, index) => (
                 <div key={index} className={`message ${message.type} ${message.fadeOut ? 'fade-out' : ''}`}>
                     {message.text}

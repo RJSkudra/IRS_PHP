@@ -53,7 +53,7 @@ class UserController extends Controller
         
         return redirect()->route('users.index')->with('success', __('validation.success.all_deleted'));
     }
-    
+
     public function updateEntries(Request $request)
     {
         $entries = $request->input('entries');
@@ -68,22 +68,32 @@ class UserController extends Controller
         return response()->json(['message' => __('entryEdit.success.created')], 200);
     }
 
-    public function destroy(User $user)
-    {
-        try {
-            $user->delete();
+    //public function destroy(User $user)
+   // {
+      //  try {
+      //      $user->delete();
             
-            if (request()->ajax()) {
-                return response()->json(['success' => __('validation.success.deleted')]);
-            }
+       //     if (request()->ajax()) {
+       //         return response()->json(['success' => __('validation.success.deleted')]);
+       //     }
             
-            return redirect()->route('users.index')->with('success', __('validation.success.deleted'));
-        } catch (\Exception $e) {
-            if (request()->ajax()) {
-                return response()->json(['error' => 'Error deleting record'], 500);
-            }
+       //     return redirect()->route('users.index')->with('success', __('validation.success.deleted'));
+       // } catch (\Exception $e) {
+        //    if (request()->ajax()) {
+       //         return response()->json(['error' => 'Error deleting record'], 500);
+       //     }
             
-            return redirect()->route('users.index')->with('error', 'Error deleting record');
-        }
+        //    return redirect()->route('users.index')->with('error', 'Error deleting record');
+      //  }
+    //}
+    public function destroy($id)
+{
+    try {
+        $user = User::findOrFail($id);
+        $user->delete();
+        return response()->json(['success' => 'Entry deleted successfully']);
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Error deleting entry'], 500);
     }
+}
 }

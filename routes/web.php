@@ -6,6 +6,7 @@ use App\Http\Controllers\EntryController;
 
 Route::get('/', [UserController::class, 'index'])->name('users.index');
 Route::post('/store', [UserController::class, 'store'])->name('users.store');
+Route::delete('/delete/{id}', [UserController::class, 'destroy']);
 Route::delete('/delete/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 Route::post('/delete-all', [UserController::class, 'deleteAll'])->name('users.deleteAll');
 Route::get('/api/entries', [UserController::class, 'getEntries']);
