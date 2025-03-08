@@ -4,8 +4,6 @@
 // Bootstrap (if you still need it)
 @use 'bootstrap/scss/bootstrap' as bs;
 
-
-
 // Tailwind CSS
 @tailwind base;
 @tailwind components;
@@ -172,46 +170,49 @@ body {
         color: vars.$message-text-color-error;
         font-size: 12px;
     }
-    body.dark {
-        background-color: #121212;
+}
+
+body.dark {
+    background-color: #121212;
+    color: #ffffff;
+}
+
+body.dark .form-container {
+    background-color: #1e1e1e;
+    border-color: #333333;
+}
+
+body.dark .form-group {
+    label {
         color: #ffffff;
     }
-    
-    body.dark .form-container {
-        background-color: #1e1e1e;
-        border-color: #333333;
-    }
-    
-    body.dark .form-group label {
-        color: #ffffff;
-    }
-    
-    body.dark .form-group input {
+
+    input {
         background-color: #333333;
         color: #ffffff;
         border-color: #444444;
     }
-    
-    body.dark .button {
-        background-color: #444444;
-        color: #ffffff;
-    }
-    
-    body.dark .button:hover {
+}
+
+body.dark .button {
+    background-color: #444444;
+    color: #ffffff;
+
+    &:hover {
         background-color: #555555;
     }
-    
-    body.dark .error {
-        color: #ff6b6b;
-    }
-    
-    body.dark .users-table {
-        background-color: #1e1e1e;
-        color: #ffffff;
-    }
-    
-    body.dark .users-table th,
-    body.dark .users-table td {
+}
+
+body.dark .error {
+    color: #ff6b6b;
+}
+
+body.dark .users-table {
+    background-color: #1e1e1e;
+    color: #ffffff;
+
+    th,
+    td {
         border-color: #333333;
     }
 }
