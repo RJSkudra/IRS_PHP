@@ -27,6 +27,7 @@ const UserForm = () => {
     const [isFormValid, setIsFormValid] = useState(false);
     const [messageQueue, setMessageQueue] = useState([]);
     const [showDetailedView, setShowDetailedView] = useState(false);
+    const [totalEntries, setTotalEntries] = useState(0);
 
     useEffect(() => {
         fetchEntries();
@@ -58,6 +59,7 @@ const UserForm = () => {
         try {
             const response = await axios.get('/api/entries');
             setEntries(response.data);
+            setTotalEntries(response.data.length);
             if (response.data.length > 0) {
                 setLastId(response.data[response.data.length - 1].id);
             }
@@ -81,6 +83,7 @@ const UserForm = () => {
         try {
             await axios.post('/delete-all');
             setEntries([]);
+            setTotalEntries(0);
             addMessageToQueue({ text: validationMessages.success.all_deleted, type: 'success' });
         } catch (error) {
             console.error('Error deleting all entries:', error);
@@ -210,6 +213,7 @@ const UserForm = () => {
             {entries.length > 0 && (
                 <TableComponent
                     entries={[...entries].sort((a, b) => b.id - a.id).slice(0, 5)}
+                    totalEntries={totalEntries}
                     handleDeleteAll={handleDeleteAll}
                     handleEditAll={() => setShowDetailedView(true)}
                 />

@@ -1,6 +1,6 @@
 import React from 'react';
 
-const TableComponent = ({ entries, handleDeleteAll, handleEditAll }) => {
+const TableComponent = ({ entries, totalEntries, handleDeleteAll, handleEditAll }) => {
     // Sort entries by ID in descending order and take the first 5 entries
     const newestEntries = [...entries].sort((a, b) => b.id - a.id).slice(0, 5);
 
@@ -8,7 +8,6 @@ const TableComponent = ({ entries, handleDeleteAll, handleEditAll }) => {
         <>
             <div className="table-header">
                 <h2>Ieraksti</h2>
-                <p>Ieraksti kopā: {entries.length}</p>
                 <div className="button-group">
                     <button onClick={handleDeleteAll} className="button delete-button">Dzēst visus ierakstus</button>
                     <button onClick={handleEditAll} className="button edit-button">Edit All Entries</button>
@@ -38,6 +37,7 @@ const TableComponent = ({ entries, handleDeleteAll, handleEditAll }) => {
                     ))}
                 </tbody>
             </table>
+            <p>Ieraksti kopā: {totalEntries}</p>
         </>
     );
 };
