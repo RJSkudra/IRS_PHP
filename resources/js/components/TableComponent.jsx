@@ -1,10 +1,14 @@
 import React from 'react';
 
 const TableComponent = ({ entries, handleDeleteAll, handleEditAll }) => {
+    // Sort entries by ID in descending order and take the first 5 entries
+    const newestEntries = [...entries].sort((a, b) => b.id - a.id).slice(0, 5);
+
     return (
         <>
             <div className="table-header">
                 <h2>Ieraksti</h2>
+                <p>Ieraksti kopā: {entries.length}</p>
                 <div className="button-group">
                     <button onClick={handleDeleteAll} className="button delete-button">Dzēst visus ierakstus</button>
                     <button onClick={handleEditAll} className="button edit-button">Edit All Entries</button>
@@ -22,7 +26,7 @@ const TableComponent = ({ entries, handleDeleteAll, handleEditAll }) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {entries.map((entry) => (
+                    {newestEntries.map((entry) => (
                         <tr key={entry.id}>
                             <td>{entry.id}</td>
                             <td>{entry.name}</td>

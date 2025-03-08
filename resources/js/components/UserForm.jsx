@@ -209,7 +209,7 @@ const UserForm = () => {
             />
             {entries.length > 0 && (
                 <TableComponent
-                    entries={entries.slice(0, 5)}
+                    entries={[...entries].sort((a, b) => b.id - a.id).slice(0, 5)}
                     handleDeleteAll={handleDeleteAll}
                     handleEditAll={() => setShowDetailedView(true)}
                 />
