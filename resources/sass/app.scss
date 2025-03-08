@@ -1,9 +1,6 @@
 // Variables
 @use 'variables' as vars;
 
-// Bootstrap (if you still need it)
-@use 'bootstrap/scss/bootstrap' as bs;
-
 // Tailwind CSS
 @tailwind base;
 @tailwind components;
