@@ -1,11 +1,14 @@
 import React from 'react';
 
-const TableComponent = ({ entries, handleDeleteAll }) => {
+const TableComponent = ({ entries, handleDeleteAll, handleEditAll }) => {
     return (
         <>
             <div className="table-header">
                 <h2>Ieraksti</h2>
-                <button onClick={handleDeleteAll} className="button delete-button">Dzēst visus ierakstus</button>
+                <div className="button-group">
+                    <button onClick={handleDeleteAll} className="button delete-button">Dzēst visus ierakstus</button>
+                    <button onClick={handleEditAll} className="button edit-button">Edit All Entries</button>
+                </div>
             </div>
             <table className="users-table">
                 <thead>

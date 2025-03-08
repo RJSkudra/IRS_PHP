@@ -3,10 +3,11 @@ import axios from 'axios';
 import '../../sass/app.scss'; // Ensure the SCSS file is imported
 import FormComponent from './FormComponent';
 import TableComponent from './TableComponent';
+import DetailedView from './DetailedView';
 import validationMessages from '../../lang/lv/validationMessages';
 import MessageQueue from './MessageQueue';
 
-const FormValidation = () => {
+const UserForm = () => {
     const [formData, setFormData] = useState({
         name: '',
         surname: '',
@@ -25,6 +26,7 @@ const FormValidation = () => {
     });
     const [isFormValid, setIsFormValid] = useState(false);
     const [messageQueue, setMessageQueue] = useState([]);
+    const [showDetailedView, setShowDetailedView] = useState(false);
 
     useEffect(() => {
         fetchEntries();
@@ -188,6 +190,10 @@ const FormValidation = () => {
 
     return (
         <div className={darkMode ? 'dark' : ''}>
+            {showDetailedView && <div className="overlay"></div>}
+            {showDetailedView && (
+                <DetailedView onClose={() => setShowDetailedView(false)} />
+            )}
             <MessageQueue messages={messageQueue} removeMessage={removeMessage} />
             <button onClick={toggleDarkMode} className="button toggle-button">
                 <i className={darkMode ? 'fas fa-sun' : 'fas fa-moon'}></i>
@@ -205,10 +211,11 @@ const FormValidation = () => {
                 <TableComponent
                     entries={entries}
                     handleDeleteAll={handleDeleteAll}
+                    handleEditAll={() => setShowDetailedView(true)}
                 />
             )}
         </div>
     );
 };
 
-export default FormValidation;
+export default UserForm;
