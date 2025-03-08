@@ -13,6 +13,7 @@ const TableComponent = ({ entries, handleDeleteAll, handleEditAll }) => {
             <table className="users-table">
                 <thead>
                     <tr>
+                        <th>ID</th>
                         <th>Name</th>
                         <th>Surname</th>
                         <th>Age</th>
@@ -23,6 +24,7 @@ const TableComponent = ({ entries, handleDeleteAll, handleEditAll }) => {
                 <tbody>
                     {entries.map((entry) => (
                         <tr key={entry.id}>
+                            <td>{entry.id}</td>
                             <td>{entry.name}</td>
                             <td>{entry.surname}</td>
                             <td>{entry.age}</td>

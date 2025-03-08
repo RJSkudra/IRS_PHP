@@ -192,10 +192,10 @@ const UserForm = () => {
         <div className={darkMode ? 'dark' : ''}>
             {showDetailedView && <div className="overlay"></div>}
             {showDetailedView && (
-                <DetailedView onClose={() => setShowDetailedView(false)} />
+                <DetailedView onClose={() => setShowDetailedView(false)} entries={entries} />
             )}
             <MessageQueue messages={messageQueue} removeMessage={removeMessage} />
-            <button onClick={toggleDarkMode} className="button toggle-button">
+            <button onClick={toggleDarkMode} className="button toggle-button" style={{ zIndex: 1003 }}>
                 <i className={darkMode ? 'fas fa-sun' : 'fas fa-moon'}></i>
             </button>
             <FormComponent
@@ -209,7 +209,7 @@ const UserForm = () => {
             />
             {entries.length > 0 && (
                 <TableComponent
-                    entries={entries}
+                    entries={entries.slice(0, 5)}
                     handleDeleteAll={handleDeleteAll}
                     handleEditAll={() => setShowDetailedView(true)}
                 />
