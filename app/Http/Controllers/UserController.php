@@ -18,6 +18,12 @@ class UserController extends Controller
         return view('users.index', compact('users', 'usersCount'));
     }
 
+    public function getEntries()
+    {
+        $users = User::all();
+        return response()->json($users);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -47,6 +53,7 @@ class UserController extends Controller
         
         return redirect()->route('users.index')->with('success', __('validation.success.all_deleted'));
     }
+
     public function destroy(User $user)
     {
         try {
