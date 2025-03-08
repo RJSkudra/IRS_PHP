@@ -3,7 +3,10 @@ import React from 'react';
 const TableComponent = ({ entries, handleDeleteAll }) => {
     return (
         <>
-            <button onClick={handleDeleteAll} className="button delete-button">Dzēst visus ierakstus</button>
+            <div className="table-header">
+                <h2>Ieraksti</h2>
+                <button onClick={handleDeleteAll} className="button delete-button">Dzēst visus ierakstus</button>
+            </div>
             <table className="users-table">
                 <thead>
                     <tr>

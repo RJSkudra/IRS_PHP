@@ -7,6 +7,7 @@
     <title>IRS datu ievade</title>
    <!-- <link rel="stylesheet" href="{{ asset('css/app.css') }}"> -->
     <link rel="icon" href="https://img.icons8.com/ultraviolet/80/data-configuration.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     @viteReactRefresh
     @vite(['resources/sass/app.scss', 'resources/js/app.jsx'])
 </head>

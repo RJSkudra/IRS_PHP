@@ -190,7 +190,7 @@ const FormValidation = () => {
         <div className={darkMode ? 'dark' : ''}>
             <MessageQueue messages={messageQueue} removeMessage={removeMessage} />
             <button onClick={toggleDarkMode} className="button toggle-button">
-                {darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                <i className={darkMode ? 'fas fa-sun' : 'fas fa-moon'}></i>
             </button>
             <FormComponent
                 formData={formData}

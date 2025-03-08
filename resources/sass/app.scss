@@ -22,7 +22,7 @@ body {
     padding: 24px;
     line-height: 1.5;
     color: #333;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 // Form container
@@ -30,10 +30,10 @@ body {
     max-width: 700px;
     margin: 24px auto;
     padding: 36px;
-    background-color: #fff;
+    background-color: transparent;
     border-radius: 12px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
+    transition: background-color 0.3s, box-shadow 0.3s;
 }
 
 // Form title
@@ -44,6 +44,7 @@ body {
     font-size: 26px;
     font-weight: 600;
     letter-spacing: -0.5px;
+    transition: color 0.3s;
 }
 
 // Form grid
@@ -77,6 +78,7 @@ body {
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 .submit-button {
@@ -105,6 +107,7 @@ body {
         color: #555;
         font-size: 14px;
         font-weight: 500;
+        transition: color 0.3s;
     }
 
     input {
@@ -112,7 +115,7 @@ body {
         border: 1px solid #e1e1e1;
         border-radius: 8px;
         font-size: 15px;
-        transition: all 0.2s ease;
+        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
 
         &:focus {
             border-color: #4a90e2;
@@ -152,6 +155,7 @@ body {
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.3s, box-shadow 0.3s;
 
     th, td {
         padding: 14px 20px;
@@ -166,6 +170,7 @@ body {
         font-weight: 600;
         color: #444;
         border-bottom: 1px solid #e0e0e0;
+        transition: background-color 0.3s, color 0.3s;
     }
 
     td {
@@ -182,6 +187,34 @@ body {
 
     tbody tr:last-child td {
         border-bottom: none;
+    }
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    h2 {
+        font-size: 24px;
+        font-weight: 600;
+        color: #333;
+        transition: color 0.3s;
+    }
+
+    .delete-button {
+        background-color: #dc3545;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+
+        &:hover {
+            background-color: #c82333;
+        }
     }
 }
 
@@ -284,30 +317,36 @@ body {
 body.dark-mode {
     background-color: #121212;
     color: #e0e0e0;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 .dark {
-    background-color: #121212;
+    background-color: transparent;
     color: #e0e0e0;
+    transition: background-color 0.3s, color 0.3s;
 
     .form-container {
-        background-color: #1e1e1e;
+        background-color: transparent;
         border: none;
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.3s, box-shadow 0.3s;
     }
 
     .form-title {
         color: #e0e0e0;
+        transition: color 0.3s;
     }
 
     .form-group label {
         color: #aaaaaa;
+        transition: color 0.3s;
     }
 
     .form-group input {
         background-color: #2a2a2a;
         color: #ffffff;
         border-color: #333333;
+        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
 
         &:focus {
             border-color: #4a90e2;
@@ -318,6 +357,7 @@ body.dark-mode {
     .button {
         &.toggle-button {
             background-color: #444444;
+            transition: background-color 0.3s;
 
             &:hover {
                 background-color: #555555;
@@ -326,6 +366,7 @@ body.dark-mode {
 
         &.submit-button {
             background-color: #2d6da3;
+            transition: background-color 0.3s;
 
             &:hover {
                 background-color: #3a8cd8;
@@ -334,6 +375,7 @@ body.dark-mode {
 
         &.delete-button {
             background-color: #9e2a2a;
+            transition: background-color 0.3s;
 
             &:hover {
                 background-color: #b83434;
@@ -354,11 +396,13 @@ body.dark-mode {
         background-color: #1e1e1e;
         border: 1px solid #333333;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.3s, box-shadow 0.3s;
 
         th {
             background-color: #252525;
             color: #e0e0e0;
             border-bottom: 1px solid #333333;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         td {
@@ -387,6 +431,22 @@ body.dark-mode {
             background-color: #311b1b;
             color: #ef9a9a;
             border-left: 4px solid #e57373;
+        }
+    }
+
+    .table-header {
+        h2 {
+            color: #e0e0e0;
+            transition: color 0.3s;
+        }
+
+        .delete-button {
+            background-color: #9e2a2a;
+            transition: background-color 0.3s;
+
+            &:hover {
+                background-color: #b83434;
+            }
         }
     }
 }
