@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { useTable, useSortBy } from 'react-table';
+import { useTable, useSortBy, useResizeColumns } from 'react-table';
 import 'react-resizable/css/styles.css';
 
 const DetailedView = ({ onClose, entries }) => {
@@ -32,16 +32,12 @@ const DetailedView = ({ onClose, entries }) => {
             }
         } catch (error) {
             if (error.response) {
-                // The request was made and the server responded with a status code
-                // that falls out of the range of 2xx
                 console.error('Error response:', error.response);
                 alert(`Error updating entries: ${error.response.status} ${error.response.statusText}`);
             } else if (error.request) {
-                // The request was made but no response was received
                 console.error('Error request:', error.request);
                 alert('Error updating entries: No response from server');
             } else {
-                // Something happened in setting up the request that triggered an Error
                 console.error('Error message:', error.message);
                 alert(`Error updating entries: ${error.message}`);
             }
@@ -189,7 +185,7 @@ const DetailedView = ({ onClose, entries }) => {
         headerGroups,
         rows,
         prepareRow,
-    } = useTable({ columns, data }, useSortBy);
+    } = useTable({ columns, data }, useSortBy, useResizeColumns);
 
     return (
         <div className="detailed-view-overlay">
@@ -204,8 +200,9 @@ const DetailedView = ({ onClose, entries }) => {
                             {headerGroups.map(headerGroup => (
                                 <tr {...headerGroup.getHeaderGroupProps()}>
                                     {headerGroup.headers.map(column => (
-                                        <th {...column.getHeaderProps(column.getSortByToggleProps())}>
+                                        <th {...column.getHeaderProps()}>
                                             {column.render('Header')}
+                                            <div {...column.getResizerProps()} className="resizer" />
                                             <span>
                                                 {column.isSorted
                                                     ? column.isSortedDesc
@@ -233,10 +230,6 @@ const DetailedView = ({ onClose, entries }) => {
                             })}
                         </tbody>
                     </table>
-                    <div className="button-container">
-                        <button onClick={handleSave} className="button submit-button">Save Changes</button>
-                        <button onClick={onClose} className="button">Cancel</button>
-                    </div>
                 </div>
             </div>
         </div>
