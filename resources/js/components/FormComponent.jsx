@@ -1,6 +1,6 @@
 import React from 'react';
 
-const FormComponent = ({ formData, errors, touched, handleChange, handleSubmit }) => {
+const FormComponent = ({ formData, errors, touched, handleChange, handleSubmit, isFormValid }) => {
     return (
         <form onSubmit={handleSubmit} id="userForm">
             <div className="form-group">
@@ -58,7 +58,7 @@ const FormComponent = ({ formData, errors, touched, handleChange, handleSubmit }
                 </div>
                 <input type="text" name="address" value={formData.address} onChange={handleChange} />
             </div>
-            <button type="submit" className="button submit-button">Submit</button>
+            <button type="submit" className="button submit-button" disabled={!isFormValid}>Submit</button>
         </form>
     );
 };

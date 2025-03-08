@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import '../../sass/app.scss'; // Ensure the SCSS file is imported
 import FormComponent from './FormComponent';
 import TableComponent from './TableComponent';
 import validationMessages from '../../lang/lv/validationMessages';
+import MessageQueue from './MessageQueue';
 
 const FormValidation = () => {
     const [formData, setFormData] = useState({
@@ -22,6 +23,8 @@ const FormValidation = () => {
         const savedMode = localStorage.getItem('darkMode');
         return savedMode === 'true';
     });
+    const [isFormValid, setIsFormValid] = useState(false);
+    const [messageQueue, setMessageQueue] = useState([]);
 
     useEffect(() => {
         fetchEntries();
@@ -40,6 +43,10 @@ const FormValidation = () => {
             document.body.classList.remove('dark-mode');
         };
     }, [darkMode]);
+
+    useEffect(() => {
+        checkFormValidity();
+    }, [formData, errors]);
 
     const toggleDarkMode = () => {
         setDarkMode(!darkMode);
@@ -72,8 +79,10 @@ const FormValidation = () => {
         try {
             await axios.post('/delete-all');
             setEntries([]);
+            addMessageToQueue({ text: validationMessages.success.all_deleted, type: 'success' });
         } catch (error) {
             console.error('Error deleting all entries:', error);
+            addMessageToQueue({ text: 'Error deleting all entries', type: 'error' });
         }
     };
 
@@ -140,6 +149,12 @@ const FormValidation = () => {
         return error;
     };
 
+    const checkFormValidity = () => {
+        const isValid = Object.values(formData).every(value => value.trim() !== '') &&
+                        Object.values(errors).every(error => error === '');
+        setIsFormValid(isValid);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         const newErrors = {};
@@ -154,15 +169,26 @@ const FormValidation = () => {
             try {
                 const response = await axios.post('/store', formData);
                 console.log('Form submitted successfully', response.data);
+                addMessageToQueue({ text: validationMessages.success.created, type: 'success' });
                 fetchEntries();
             } catch (error) {
                 console.error('Error submitting form:', error);
+                addMessageToQueue({ text: 'Error submitting form', type: 'error' });
             }
         }
     };
 
+    const addMessageToQueue = (message) => {
+        setMessageQueue(prevQueue => [...prevQueue, message]);
+    };
+
+    const removeMessage = (index) => {
+        setMessageQueue(prevQueue => prevQueue.filter((_, i) => i !== index));
+    };
+
     return (
         <div className={darkMode ? 'dark' : ''}>
+            <MessageQueue messages={messageQueue} removeMessage={removeMessage} />
             <button onClick={toggleDarkMode} className="button toggle-button">
                 {darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             </button>
@@ -172,6 +198,7 @@ const FormValidation = () => {
                 touched={touched}
                 handleChange={handleChange}
                 handleSubmit={handleSubmit}
+                isFormValid={isFormValid}
             />
             {entries.length > 0 && (
                 <TableComponent

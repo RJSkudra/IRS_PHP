@@ -1,27 +1,32 @@
 const validationMessages = {
     name: {
         required: 'Vārds ir obligāts',
-        regex: 'Vārdam jābūt tikai burtiem un atstarpēm',
-        length: 'Vārdam jābūt no 2 līdz 50 rakstzīmēm'
+        regex: 'Vārds satur nederīgus simbolus.',
+        length: 'Vārdam jāsatur 2 līdz 50 simboliem.'
     },
     surname: {
-        required: 'Uzvārds ir obligāts',
-        regex: 'Uzvārdam jābūt tikai burtiem un atstarpēm',
-        length: 'Uzvārdam jābūt no 2 līdz 50 rakstzīmēm'
+        required: 'Uzvārda lauks ir obligāts.',
+        regex: 'Uzvārds satur nederīgus simbolus.',
+        length: 'Uzvārdam jāsatur 2 līdz 50 simboliem.'
     },
     age: {
-        required: 'Vecums ir obligāts',
-        integer: 'Vecumam jābūt skaitlim',
-        min: 'Vecumam jābūt vismaz 0',
-        max: 'Vecumam jābūt mazākam par 200'
+        required: 'Vecuma lauks ir obligāts.',
+        integer: 'Vecumam jābūt veselam skaitlim.',
+        min: 'Vecumam jābūt pozitīvam veselam skaitlim.',
+        max: 'Ievadītajai personai jābūt organiski dzīvai, nevis kaut kādam kiborgam...'
     },
     phone: {
-        required: 'Telefona numurs ir obligāts',
-        regex: 'Telefona numuram jābūt 8 cipariem'
+        required: 'Telefona numura lauks ir obligāts.',
+        regex: 'Telefona numuram jāsatur 8 cipari.'
     },
     address: {
-        required: 'Adrese ir obligāta',
-        regex: 'Adresei jābūt burtiem un cipariem'
+        required: 'Adreses lauks ir obligāts.',
+        regex: 'Adrese satur nederīgus simbolus.'
+    },
+    success: {
+        created: 'Ieraksts veiksmīgi pievienots',
+        deleted: 'Ieraksts veiksmīgi dzēsts',
+        all_deleted: 'Visi ieraksti veiksmīgi dzēsti'
     }
 };
 
