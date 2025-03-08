@@ -10,6 +10,8 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{{ asset('js/validation.js') }}" defer></script>
     <script src="{{ asset('js/ajax.js') }}" defer></script>
+    @viteReactRefresh
+    @vite('resources/js/app.jsx')
 </head>
 <body>
     <div class="form-container">
