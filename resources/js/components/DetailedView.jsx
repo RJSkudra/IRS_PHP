@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { ResizableBox } from 'react-resizable';
+import { useTable, useSortBy } from 'react-table';
 import 'react-resizable/css/styles.css';
 
 const DetailedView = ({ onClose, entries }) => {
     const [editableEntryId, setEditableEntryId] = useState(null);
     const [sortedEntries, setSortedEntries] = useState(entries);
-    const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'ascending' });
+    const [originalEntries, setOriginalEntries] = useState(entries);
+    const [editingEntry, setEditingEntry] = useState(null);
 
     useEffect(() => {
         setSortedEntries(entries);
+        setOriginalEntries(entries);
     }, [entries]);
 
     const handleInputChange = (id, field, value) => {
@@ -20,11 +22,28 @@ const DetailedView = ({ onClose, entries }) => {
 
     const handleSave = async () => {
         try {
-            await axios.post('/api/update-entries', { entries: sortedEntries });
-            alert('Entries updated successfully');
+            const response = await axios.post('/api/update-entries', { entries: sortedEntries });
+            if (response.status === 200) {
+                alert('Entries updated successfully');
+            } else {
+                console.error('Unexpected response:', response);
+                alert('Unexpected response from the server');
+            }
         } catch (error) {
-            console.error('Error updating entries:', error);
-            alert('Error updating entries');
+            if (error.response) {
+                // The request was made and the server responded with a status code
+                // that falls out of the range of 2xx
+                console.error('Error response:', error.response);
+                alert(`Error updating entries: ${error.response.status} ${error.response.statusText}`);
+            } else if (error.request) {
+                // The request was made but no response was received
+                console.error('Error request:', error.request);
+                alert('Error updating entries: No response from server');
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                console.error('Error message:', error.message);
+                alert(`Error updating entries: ${error.message}`);
+            }
         }
     };
 
@@ -41,24 +60,135 @@ const DetailedView = ({ onClose, entries }) => {
 
     const handleEdit = (id) => {
         setEditableEntryId(id);
+        setEditingEntry(sortedEntries.find(entry => entry.id === id));
     };
 
-    const handleSort = (key) => {
-        let direction = 'ascending';
-        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-            direction = 'descending';
-        }
-        setSortConfig({ key, direction });
-        setSortedEntries([...sortedEntries].sort((a, b) => {
-            if (a[key] < b[key]) {
-                return direction === 'ascending' ? -1 : 1;
-            }
-            if (a[key] > b[key]) {
-                return direction === 'ascending' ? 1 : -1;
-            }
-            return 0;
-        }));
+    const handleApply = () => {
+        setEditableEntryId(null);
+        handleSave();
     };
+
+    const handleCancel = () => {
+        setSortedEntries(sortedEntries.map(entry => 
+            entry.id === editableEntryId ? editingEntry : entry
+        ));
+        setEditableEntryId(null);
+    };
+
+    const columns = useMemo(() => [
+        {
+            Header: 'ID',
+            accessor: 'id',
+        },
+        {
+            Header: 'Name',
+            accessor: 'name',
+            Cell: ({ value, row }) => (
+                <input 
+                    type="text" 
+                    value={value} 
+                    onChange={(e) => handleInputChange(row.original.id, 'name', e.target.value)} 
+                    disabled={editableEntryId !== row.original.id}
+                />
+            ),
+        },
+        {
+            Header: 'Surname',
+            accessor: 'surname',
+            Cell: ({ value, row }) => (
+                <input 
+                    type="text" 
+                    value={value} 
+                    onChange={(e) => handleInputChange(row.original.id, 'surname', e.target.value)} 
+                    disabled={editableEntryId !== row.original.id}
+                />
+            ),
+        },
+        {
+            Header: 'Age',
+            accessor: 'age',
+            Cell: ({ value, row }) => (
+                <input 
+                    type="number" 
+                    value={value} 
+                    onChange={(e) => handleInputChange(row.original.id, 'age', e.target.value)} 
+                    disabled={editableEntryId !== row.original.id}
+                />
+            ),
+        },
+        {
+            Header: 'Phone',
+            accessor: 'phone',
+            Cell: ({ value, row }) => (
+                <input 
+                    type="text" 
+                    value={value} 
+                    onChange={(e) => handleInputChange(row.original.id, 'phone', e.target.value)} 
+                    disabled={editableEntryId !== row.original.id}
+                />
+            ),
+        },
+        {
+            Header: 'Address',
+            accessor: 'address',
+            Cell: ({ value, row }) => (
+                <input 
+                    type="text" 
+                    value={value} 
+                    onChange={(e) => handleInputChange(row.original.id, 'address', e.target.value)} 
+                    disabled={editableEntryId !== row.original.id}
+                />
+            ),
+        },
+        {
+            Header: 'Actions',
+            Cell: ({ row }) => (
+                <>
+                    {editableEntryId === row.original.id ? (
+                        <>
+                            <button 
+                                className="apply-button" 
+                                onClick={handleApply}
+                            >
+                                Apply
+                            </button>
+                            <button 
+                                className="cancel-button" 
+                                onClick={handleCancel}
+                            >
+                                Cancel
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <button 
+                                className="edit-button" 
+                                onClick={() => handleEdit(row.original.id)}
+                            >
+                                Edit
+                            </button>
+                            <button 
+                                className="delete-button" 
+                                onClick={() => handleDelete(row.original.id)}
+                            >
+                                Delete
+                            </button>
+                        </>
+                    )}
+                </>
+            ),
+        },
+    ], [editableEntryId, sortedEntries]);
+
+    const data = useMemo(() => sortedEntries, [sortedEntries]);
+
+    const {
+        getTableProps,
+        getTableBodyProps,
+        headerGroups,
+        rows,
+        prepareRow,
+    } = useTable({ columns, data }, useSortBy);
 
     return (
         <div className="detailed-view-overlay">
@@ -68,88 +198,38 @@ const DetailedView = ({ onClose, entries }) => {
                     <h2>Edit Entries</h2>
                 </div>
                 <div className="detailed-view-content">
-                    <table className="users-table">
+                    <table {...getTableProps()} className="users-table">
                         <thead>
-                            <tr>
-                                <th onClick={() => handleSort('id')}>ID</th>
-                                <th onClick={() => handleSort('name')}>Name</th>
-                                <th onClick={() => handleSort('surname')}>Surname</th>
-                                <th onClick={() => handleSort('age')}>Age</th>
-                                <th onClick={() => handleSort('phone')}>Phone</th>
-                                <th onClick={() => handleSort('address')}>Address</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {sortedEntries.map(entry => (
-                                <tr key={entry.id}>
-                                    <td>{entry.id}</td>
-                                    <td>
-                                        <ResizableBox width={100} height={30} axis="x">
-                                            <input 
-                                                type="text" 
-                                                value={entry.name} 
-                                                onChange={(e) => handleInputChange(entry.id, 'name', e.target.value)} 
-                                                disabled={editableEntryId !== entry.id}
-                                            />
-                                        </ResizableBox>
-                                    </td>
-                                    <td>
-                                        <ResizableBox width={100} height={30} axis="x">
-                                            <input 
-                                                type="text" 
-                                                value={entry.surname} 
-                                                onChange={(e) => handleInputChange(entry.id, 'surname', e.target.value)} 
-                                                disabled={editableEntryId !== entry.id}
-                                            />
-                                        </ResizableBox>
-                                    </td>
-                                    <td>
-                                        <ResizableBox width={100} height={30} axis="x">
-                                            <input 
-                                                type="number" 
-                                                value={entry.age} 
-                                                onChange={(e) => handleInputChange(entry.id, 'age', e.target.value)} 
-                                                disabled={editableEntryId !== entry.id}
-                                            />
-                                        </ResizableBox>
-                                    </td>
-                                    <td>
-                                        <ResizableBox width={100} height={30} axis="x">
-                                            <input 
-                                                type="text" 
-                                                value={entry.phone} 
-                                                onChange={(e) => handleInputChange(entry.id, 'phone', e.target.value)} 
-                                                disabled={editableEntryId !== entry.id}
-                                            />
-                                        </ResizableBox>
-                                    </td>
-                                    <td>
-                                        <ResizableBox width={100} height={30} axis="x">
-                                            <input 
-                                                type="text" 
-                                                value={entry.address} 
-                                                onChange={(e) => handleInputChange(entry.id, 'address', e.target.value)} 
-                                                disabled={editableEntryId !== entry.id}
-                                            />
-                                        </ResizableBox>
-                                    </td>
-                                    <td>
-                                        <button 
-                                            className="edit-button" 
-                                            onClick={() => handleEdit(entry.id)}
-                                        >
-                                            Edit
-                                        </button>
-                                        <button 
-                                            className="delete-button" 
-                                            onClick={() => handleDelete(entry.id)}
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
+                            {headerGroups.map(headerGroup => (
+                                <tr {...headerGroup.getHeaderGroupProps()}>
+                                    {headerGroup.headers.map(column => (
+                                        <th {...column.getHeaderProps(column.getSortByToggleProps())}>
+                                            {column.render('Header')}
+                                            <span>
+                                                {column.isSorted
+                                                    ? column.isSortedDesc
+                                                        ? ' 🔽'
+                                                        : ' 🔼'
+                                                    : ''}
+                                            </span>
+                                        </th>
+                                    ))}
                                 </tr>
                             ))}
+                        </thead>
+                        <tbody {...getTableBodyProps()}>
+                            {rows.map(row => {
+                                prepareRow(row);
+                                return (
+                                    <tr {...row.getRowProps()}>
+                                        {row.cells.map(cell => (
+                                            <td {...cell.getCellProps()}>
+                                                {cell.render('Cell')}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                     <div className="button-container">
