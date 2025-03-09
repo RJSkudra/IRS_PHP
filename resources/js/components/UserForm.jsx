@@ -8,7 +8,7 @@ import DetailedView from './DetailedView';
 import validationMessages from '../../lang/lv/validationMessages';
 import MessageQueue from './MessageQueue';
 
-const socket = io(window.location.origin); // Connect to the server using the same origin
+const socket = io('http://localhost:4000'); // Connect to the server using the same origin
 
 const UserForm = () => {
     const [formData, setFormData] = useState({
@@ -179,7 +179,7 @@ const UserForm = () => {
         setErrors(newErrors);
         if (Object.keys(newErrors).length === 0) {
             try {
-                const response = await axios.post('/store', formData);
+                const response = await axios.post('http://localhost:8000/store', formData); // Ensure the correct URL
                 console.log('Form submitted successfully', response.data);
                 addMessageToQueue({ text: validationMessages.success.created, type: 'success' });
                 fetchEntries();

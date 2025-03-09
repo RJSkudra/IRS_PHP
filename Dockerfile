@@ -48,4 +48,4 @@ USER www-data
 EXPOSE 9000 3000 4000
 
 # Start npm and php artisan serve
-CMD ["sh", "-c", "npm run dev & php artisan serve --host=0.0.0.0 --port=9000"]
+CMD ["sh", "-c", "node resources/js/server.js & npm run dev & php artisan serve --host=0.0.0.0 --port=9000"]

@@ -11,6 +11,7 @@ export default defineConfig({
         react()
     ],
     server: {
+        port: 5173,
         cors: {
             origin: '*', // Allow all origins
             methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

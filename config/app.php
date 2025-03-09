@@ -52,7 +52,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'https://irs.namejs.net'),
+    'url' => env('APP_URL', 'http://localhost:8000'),
 
     /*
     |--------------------------------------------------------------------------

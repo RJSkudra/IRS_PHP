@@ -264,34 +264,44 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                 <div className="detailed-view-content">
                     <table {...getTableProps()} className="users-table">
                         <thead>
-                            {headerGroups.map(headerGroup => (
-                                <tr {...headerGroup.getHeaderGroupProps()}>
-                                    {headerGroup.headers.map(column => (
-                                        <th {...column.getHeaderProps()}>
-                                            {column.render('Header')}
-                                            <div {...column.getResizerProps()} className="resizer" />
-                                            <span>
-                                                {column.isSorted
-                                                    ? column.isSortedDesc
-                                                        ? ' 🔽'
-                                                        : ' 🔼'
-                                                    : ''}
-                                            </span>
-                                        </th>
-                                    ))}
-                                </tr>
-                            ))}
+                            {headerGroups.map(headerGroup => {
+                                const { key, ...restHeaderGroupProps } = headerGroup.getHeaderGroupProps();
+                                return (
+                                    <tr key={key} {...restHeaderGroupProps}>
+                                        {headerGroup.headers.map(column => {
+                                            const { key, ...rest } = column.getHeaderProps();
+                                            return (
+                                                <th key={key} {...rest}>
+                                                    {column.render('Header')}
+                                                    <div {...column.getResizerProps()} className="resizer" />
+                                                    <span>
+                                                        {column.isSorted
+                                                            ? column.isSortedDesc
+                                                                ? ' 🔽'
+                                                                : ' 🔼'
+                                                            : ''}
+                                                    </span>
+                                                </th>
+                                            );
+                                        })}
+                                    </tr>
+                                );
+                            })}
                         </thead>
                         <tbody {...getTableBodyProps()}>
                             {rows.map(row => {
                                 prepareRow(row);
+                                const { key, ...restRowProps } = row.getRowProps();
                                 return (
-                                    <tr {...row.getRowProps()}>
-                                        {row.cells.map(cell => (
-                                            <td {...cell.getCellProps()}>
-                                                {cell.render('Cell')}
-                                            </td>
-                                        ))}
+                                    <tr key={key} {...restRowProps}>
+                                        {row.cells.map(cell => {
+                                            const { key: cellKey, ...restCellProps } = cell.getCellProps();
+                                            return (
+                                                <td key={cellKey} {...restCellProps}>
+                                                    {cell.render('Cell')}
+                                                </td>
+                                            );
+                                        })}
                                     </tr>
                                 );
                             })}
