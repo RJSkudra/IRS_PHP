@@ -18,8 +18,6 @@
     padding: 0;
 }
 
-
-
 .message-container.bottom-right {
     position: fixed;
     bottom: 20px;
@@ -66,4 +64,22 @@
     font-size: 16px;
     cursor: pointer;
     margin-left: 10px;
+}
+
+body.dark-mode .message {
+    background-color: #333;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+body.dark-mode .message.success {
+    background-color: #388e3c;
+}
+
+body.dark-mode .message.error {
+    background-color: #d32f2f;
+}
+
+body.dark-mode .close-button {
+    color: #e0e0e0;
 }
