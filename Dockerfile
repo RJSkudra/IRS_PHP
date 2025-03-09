@@ -36,11 +36,13 @@ COPY . /var/www
 COPY --chown=www-data:www-data . /var/www
 
 # Install npm dependencies and build assets
-RUN npm install && npm run build
+RUN npm install
 
 # Change current user to www
 USER www-data
 
-# Expose port 9000 and start php-fpm server
-EXPOSE 9000
-CMD ["php-fpm"]
+# Expose port 9000 for php-fpm and port 3000 for npm
+EXPOSE 9000 3000
+
+# Start npm and php artisan serve
+CMD ["sh", "-c", "npm run dev & php artisan serve --host=0.0.0.0 --port=9000"]
