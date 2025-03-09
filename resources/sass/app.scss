@@ -21,6 +21,7 @@
 /* Add to your stylesheet */
 .sortable-header {
     cursor: pointer;
+    -webkit-user-select: none;
     user-select: none;
     background-color: #f2f2f2;
     transition: background-color 0.2s;
