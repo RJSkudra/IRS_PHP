@@ -10,7 +10,7 @@ import MessageQueue from './MessageQueue';
 import { validateField, validateForm, areAllFieldsFilled } from '../utils/Validation';
 
 // Use environment variables for the Socket.io connection
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:4000';
+const SOCKET_URL = import.meta.env.SOCKET_SERVER_URL || 'http://localhost:4000';
 const socket = io(SOCKET_URL);
 
 const UserForm = () => {
