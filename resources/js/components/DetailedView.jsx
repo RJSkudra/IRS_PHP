@@ -3,7 +3,6 @@ import axios from 'axios';
 import { useTable, useSortBy, useResizeColumns, useFlexLayout } from 'react-table';
 import 'react-resizable/css/styles.css';
 import MessageQueue from './MessageQueue';
-import validationMessages from '../../lang/lv/validationMessages';
 import detailedViewMessages from '../../lang/lv/detailedViewMessages'; // Import the translations
 import { validateField } from '../utils/Validation';
 
