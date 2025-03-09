@@ -16,6 +16,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
     const [errors, setErrors] = useState({});
     const inputRefs = useRef({});
     const [editValues, setEditValues] = useState({});
+    const [focusedField, setFocusedField] = useState(null);
 
     useEffect(() => {
         if (!isEditing) {
@@ -24,7 +25,28 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
         }
     }, [entries, isEditing]);
 
-    const handleInputChange = (id, field, value) => {
+    // Modify this useEffect to prevent loops
+    useEffect(() => {
+        // Only attempt to focus if we have a focusedField and are in edit mode
+        if (focusedField && editableEntryId) {
+            const { id, field } = focusedField;
+            setTimeout(() => {
+                if (inputRefs.current[id]?.[field]) {
+                    inputRefs.current[id][field].focus();
+                    
+                    // Preserve cursor position by moving it to the end
+                    const length = inputRefs.current[id][field].value.length;
+                    inputRefs.current[id][field].setSelectionRange(length, length);
+                }
+            }, 0); // Use setTimeout to ensure DOM is updated
+        }
+    }, [focusedField, editableEntryId]); // Remove editValues and errors from dependencies
+
+    // Update handleInputChange
+    const handleInputChange = useCallback((id, field, value) => {
+        // Track which field has focus
+        setFocusedField({ id, field });
+        
         // Update the field in edit values while preserving other fields
         setEditValues(prev => ({
             ...prev,
@@ -40,7 +62,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
             ...prevErrors,
             [field]: error
         }));
-    };
+    }, []);
 
     const handleSave = async () => {
         if (Object.values(errors).some(error => error)) {
@@ -178,6 +200,37 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
         setMessageQueue(prevQueue => prevQueue.filter((_, i) => i !== index));
     };
 
+    // Define cellRenderer with useCallback
+    const cellRenderer = useCallback(({ value, row, fieldName }) => {
+        const displayValue = editableEntryId === row.original.id && editValues[row.original.id]?.[fieldName] !== undefined
+            ? editValues[row.original.id][fieldName]
+            : value;
+            
+        const fieldError = editableEntryId === row.original.id && errors[fieldName] ? errors[fieldName] : null;
+            
+        return (
+            <div>
+                <input 
+                    type={fieldName === 'age' ? 'number' : 'text'}
+                    value={displayValue} 
+                    onChange={(e) => handleInputChange(row.original.id, fieldName, e.target.value)}
+                    onFocus={() => setFocusedField({ id: row.original.id, field: fieldName })}
+                    disabled={editableEntryId !== row.original.id}
+                    ref={el => {
+                        if (el) {
+                            if (!inputRefs.current[row.original.id]) {
+                                inputRefs.current[row.original.id] = {};
+                            }
+                            inputRefs.current[row.original.id][fieldName] = el;
+                        }
+                    }}
+                />
+                {fieldError && <span className="error">{fieldError}</span>}
+            </div>
+        );
+    }, [editableEntryId, editValues, errors, handleInputChange]);
+
+    // Update your columns definition to use the new cell renderer for each field
     const columns = useMemo(() => [
         {
             Header: 'ID',
@@ -202,159 +255,27 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
         {
             Header: 'Name',
             accessor: 'name',
-            Cell: ({ value, row }) => {
-                const fieldName = 'name';
-                const displayValue = editableEntryId === row.original.id && editValues[row.original.id]?.[fieldName] !== undefined
-                    ? editValues[row.original.id][fieldName]
-                    : value;
-                    
-                // Get field-specific error from editableEntryId
-                const fieldError = editableEntryId === row.original.id && errors[fieldName] ? errors[fieldName] : null;
-                    
-                return (
-                    <div>
-                        <input 
-                            type="text" 
-                            value={displayValue} 
-                            onChange={(e) => handleInputChange(row.original.id, 'name', e.target.value)} 
-                            disabled={editableEntryId !== row.original.id}
-                            ref={el => {
-                                if (el) {
-                                    if (!inputRefs.current[row.original.id]) {
-                                        inputRefs.current[row.original.id] = {};
-                                    }
-                                    inputRefs.current[row.original.id].name = el;
-                                }
-                            }}
-                        />
-                        {fieldError && <span className="error">{fieldError}</span>}
-                    </div>
-                );
-            }
+            Cell: ({ value, row }) => cellRenderer({ value, row, fieldName: 'name' })
         },
         {
             Header: 'Surname',
             accessor: 'surname',
-            Cell: ({ value, row }) => {
-                const fieldName = 'surname';
-                const displayValue = editableEntryId === row.original.id && editValues[row.original.id]?.[fieldName] !== undefined
-                    ? editValues[row.original.id][fieldName]
-                    : value;
-                    
-                // Get field-specific error from editableEntryId
-                const fieldError = editableEntryId === row.original.id && errors[fieldName] ? errors[fieldName] : null;
-                    
-                return (
-                    <div>
-                        <input 
-                            type="text" 
-                            value={displayValue} 
-                            onChange={(e) => handleInputChange(row.original.id, 'surname', e.target.value)} 
-                            disabled={editableEntryId !== row.original.id}
-                            ref={el => {
-                                if (!inputRefs.current[row.original.id]) {
-                                    inputRefs.current[row.original.id] = {};
-                                }
-                                inputRefs.current[row.original.id].surname = el;
-                            }}
-                        />
-                        {fieldError && <span className="error">{fieldError}</span>}
-                    </div>
-                );
-            }
+            Cell: ({ value, row }) => cellRenderer({ value, row, fieldName: 'surname' })
         },
         {
             Header: 'Age',
             accessor: 'age',
-            Cell: ({ value, row }) => {
-                const fieldName = 'age';
-                const displayValue = editableEntryId === row.original.id && editValues[row.original.id]?.[fieldName] !== undefined
-                    ? editValues[row.original.id][fieldName]
-                    : value;
-                    
-                // Get field-specific error from editableEntryId
-                const fieldError = editableEntryId === row.original.id && errors[fieldName] ? errors[fieldName] : null;
-                    
-                return (
-                    <div>
-                        <input 
-                            type="number" 
-                            value={displayValue} 
-                            onChange={(e) => handleInputChange(row.original.id, 'age', e.target.value)} 
-                            disabled={editableEntryId !== row.original.id}
-                            ref={el => {
-                                if (!inputRefs.current[row.original.id]) {
-                                    inputRefs.current[row.original.id] = {};
-                                }
-                                inputRefs.current[row.original.id].age = el;
-                            }}
-                        />
-                        {fieldError && <span className="error">{fieldError}</span>}
-                    </div>
-                );
-            }
+            Cell: ({ value, row }) => cellRenderer({ value, row, fieldName: 'age' })
         },
         {
             Header: 'Phone',
             accessor: 'phone',
-            Cell: ({ value, row }) => {
-                const fieldName = 'phone';
-                const displayValue = editableEntryId === row.original.id && editValues[row.original.id]?.[fieldName] !== undefined
-                    ? editValues[row.original.id][fieldName]
-                    : value;
-                    
-                // Get field-specific error from editableEntryId
-                const fieldError = editableEntryId === row.original.id && errors[fieldName] ? errors[fieldName] : null;
-                    
-                return (
-                    <div>
-                        <input 
-                            type="text" 
-                            value={displayValue} 
-                            onChange={(e) => handleInputChange(row.original.id, 'phone', e.target.value)} 
-                            disabled={editableEntryId !== row.original.id}
-                            ref={el => {
-                                if (!inputRefs.current[row.original.id]) {
-                                    inputRefs.current[row.original.id] = {};
-                                }
-                                inputRefs.current[row.original.id].phone = el;
-                            }}
-                        />
-                        {fieldError && <span className="error">{fieldError}</span>}
-                    </div>
-                );
-            }
+            Cell: ({ value, row }) => cellRenderer({ value, row, fieldName: 'phone' })
         },
         {
             Header: 'Address',
             accessor: 'address',
-            Cell: ({ value, row }) => {
-                const fieldName = 'address';
-                const displayValue = editableEntryId === row.original.id && editValues[row.original.id]?.[fieldName] !== undefined
-                    ? editValues[row.original.id][fieldName]
-                    : value;
-                    
-                // Get field-specific error from editableEntryId
-                const fieldError = editableEntryId === row.original.id && errors[fieldName] ? errors[fieldName] : null;
-                    
-                return (
-                    <div>
-                        <input 
-                            type="text" 
-                            value={displayValue} 
-                            onChange={(e) => handleInputChange(row.original.id, 'address', e.target.value)} 
-                            disabled={editableEntryId !== row.original.id}
-                            ref={el => {
-                                if (!inputRefs.current[row.original.id]) {
-                                    inputRefs.current[row.original.id] = {};
-                                }
-                                inputRefs.current[row.original.id].address = el;
-                            }}
-                        />
-                        {fieldError && <span className="error">{fieldError}</span>}
-                    </div>
-                );
-            }
+            Cell: ({ value, row }) => cellRenderer({ value, row, fieldName: 'address' })
         },
         {
             Header: 'Actions',
@@ -394,7 +315,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                 </>
             ),
         },
-    ], [editableEntryId, sortedEntries, errors, editValues]);
+    ], [editableEntryId, cellRenderer]); // Remove sortedEntries, errors, editValues
 
     const data = useMemo(() => sortedEntries, [sortedEntries]);
 
