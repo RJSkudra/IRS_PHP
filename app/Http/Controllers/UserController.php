@@ -3,9 +3,17 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Services\SocketService;
 
 class UserController extends Controller
 {
+    protected $socketService;
+    
+    public function __construct(SocketService $socketService)
+    {
+        $this->socketService = $socketService;
+    }
+
     public function index()
     {
         $users = User::all();
@@ -40,10 +48,7 @@ class UserController extends Controller
         $entries = User::all();
         
         // Notify Socket.io server about the change
-        $client = new \GuzzleHttp\Client();
-        $client->post('http://localhost:4000/api/update-entries', [
-            'json' => ['entries' => $entries]
-        ]);
+        $this->socketService->updateEntries($entries);
         
         if ($request->ajax()) {
             return response()->json(['success' => __('validation.success.created')]);
@@ -57,10 +62,7 @@ class UserController extends Controller
         User::truncate();
         
         // Notify Socket.io server about the change
-        $client = new \GuzzleHttp\Client();
-        $client->post('http://localhost:4000/api/update-entries', [
-            'json' => ['entries' => []]
-        ]);
+        $this->socketService->updateEntries([]);
         
         if (request()->ajax()) {
             return response()->json(['success' => __('validation.success.all_deleted')]);
@@ -93,10 +95,7 @@ class UserController extends Controller
             $entries = User::all();
             
             // Notify Socket.io server about the change
-            $client = new \GuzzleHttp\Client();
-            $client->post('http://localhost:4000/api/update-entries', [
-                'json' => ['entries' => $entries]
-            ]);
+            $this->socketService->updateEntries($entries);
             
             return response()->json(['success' => 'Entry deleted successfully']);
         } catch (\Exception $e) {
