@@ -8,7 +8,7 @@ import DetailedView from './DetailedView';
 import validationMessages from '../../lang/lv/validationMessages';
 import MessageQueue from './MessageQueue';
 
-const socket = io('http://localhost:4000'); // Connect to the server using the same origin
+const socket = io('http://localhost:4000'); // Ensure the correct server URL
 
 const UserForm = () => {
     const [formData, setFormData] = useState({
@@ -34,45 +34,58 @@ const UserForm = () => {
     const [isEditing, setIsEditing] = useState(false); // New state variable
 
     useEffect(() => {
+        socket.on('connect', () => {
+            console.log('Connected to WebSocket server');
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Disconnected from WebSocket server');
+        });
+
         socket.on('entriesUpdated', (updatedEntries) => {
             setEntries(updatedEntries);
             setTotalEntries(updatedEntries.length);
             if (updatedEntries.length > 0) {
                 setLastId(updatedEntries[updatedEntries.length - 1].id);
+            } else {
+                setLastId(null);
             }
         });
 
         return () => {
+            socket.off('connect');
+            socket.off('disconnect');
             socket.off('entriesUpdated');
         };
     }, []);
 
     useEffect(() => {
-        if (!isEditing) {
-            fetchEntries();
-        }
-    }, [isEditing]);
-
-    useEffect(() => {
         if (darkMode) {
             document.body.classList.add('dark-mode');
-        } else {
-            document.body.classList.remove('dark-mode');
-        }
-        localStorage.setItem('darkMode', darkMode);
-        return () => {
-            document.body.classList.remove('dark-mode');
-        };
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+            return () => {
+                document.body.classList.remove('dark-mode');
+            };
+        }, [darkMode]);
+    
+        useEffect(() => {
+            localStorage.setItem('darkMode', darkMode);
     }, [darkMode]);
 
     useEffect(() => {
         checkFormValidity();
     }, [formData, errors]);
 
+    useEffect(() => {
+        fetchEntries();
+    }, []);
+
     const toggleDarkMode = () => {
         setDarkMode(!darkMode);
     };
-
+            // Removed duplicate fetchEntries function
     const fetchEntries = async () => {
         try {
             const response = await axios.get('/api/entries');

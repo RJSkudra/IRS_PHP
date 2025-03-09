@@ -1,9 +1,6 @@
 import React from 'react';
 
 const TableComponent = ({ entries, totalEntries, handleDeleteAll, handleEditAll }) => {
-    // Sort entries by ID in descending order and take the first 5 entries
-    const newestEntries = [...entries].sort((a, b) => b.id - a.id).slice(0, 5);
-
     return (
         <>
             <div className="table-header">
@@ -25,7 +22,7 @@ const TableComponent = ({ entries, totalEntries, handleDeleteAll, handleEditAll 
                     </tr>
                 </thead>
                 <tbody>
-                    {newestEntries.map((entry) => (
+                    {entries.map((entry) => (
                         <tr key={entry.id}>
                             <td>{entry.id}</td>
                             <td>{entry.name}</td>

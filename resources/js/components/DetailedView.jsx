@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useTable, useSortBy, useResizeColumns, useFlexLayout } from 'react-table';
 import 'react-resizable/css/styles.css';
 import MessageQueue from './MessageQueue';
+import validationMessages from '../../lang/lv/validationMessages';
 
 const DetailedView = ({ onClose, entries, setIsEditing }) => {
     const [editableEntryId, setEditableEntryId] = useState(null);
@@ -11,6 +12,9 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
     const [editingEntry, setEditingEntry] = useState(null);
     const [messageQueue, setMessageQueue] = useState([]);
     const [isEditing, setIsEditingLocal] = useState(false); // New state variable
+    const [errors, setErrors] = useState({});
+    const inputRefs = useRef({}); // Create a ref object to store input references
+    const [editValues, setEditValues] = useState({});
 
     useEffect(() => {
         if (!isEditing) {
@@ -19,13 +23,74 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
         }
     }, [entries, isEditing]);
 
+    const validateField = (name, value) => {
+        let error = '';
+        switch (name) {
+            case 'name':
+            case 'surname':
+                if (!value.trim()) {
+                    error = validationMessages[name].required;
+                } else if (!/^[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ\- ]+$/u.test(value)) {
+                    error = validationMessages[name].regex;
+                } else if (value.length < 2 || value.length > 50) {
+                    error = validationMessages[name].length;
+                }
+                break;
+            case 'age':
+                if (!value.trim()) {
+                    error = validationMessages.age.required;
+                } else if (!/^(0|[1-9]\d*)$/.test(value)) {
+                    error = validationMessages.age.integer;
+                } else if (value < 0) {
+                    error = validationMessages.age.min;
+                } else if (value > 200) {
+                    error = validationMessages.age.max;
+                }
+                break;
+            case 'phone':
+                if (!value.trim()) {
+                    error = validationMessages.phone.required;
+                } else if (!/^[0-9]{8}$/.test(value)) {
+                    error = validationMessages.phone.regex;
+                }
+                break;
+            case 'address':
+                if (!value.trim()) {
+                    error = validationMessages.address.required;
+                } else if (!/^(?=.*[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ])(?=.*[0-9])[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ0-9\s,.-]+$/u.test(value)) {
+                    error = validationMessages.address.regex;
+                }
+                break;
+            default:
+                break;
+        }
+        return error;
+    };
+
     const handleInputChange = (id, field, value) => {
-        setSortedEntries(sortedEntries.map(entry => 
-            entry.id === id ? { ...entry, [field]: value } : entry
-        ));
+        // Update only the local edit values
+        setEditValues(prev => ({
+            ...prev,
+            [id]: {
+                ...prev[id],
+                [field]: value
+            }
+        }));
+        
+        // Validate and set errors
+        const error = validateField(field, value);
+        setErrors(prevErrors => ({
+            ...prevErrors,
+            [field]: error
+        }));
     };
 
     const handleSave = async () => {
+        if (Object.values(errors).some(error => error)) {
+            addMessageToQueue({ text: 'Please fix validation errors before saving.', type: 'error' });
+            return;
+        }
+
         try {
             const response = await axios.post('/api/update-entries', { entries: sortedEntries });
             if (response.status === 200) {
@@ -52,8 +117,8 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
     const handleDelete = async (id) => {
         try {
             await axios.delete(`/delete/${id}`);
-            const response = await axios.get('/api/entries'); // Fetch updated entries
-            setSortedEntries(response.data); // Update state with new entries
+            // No need to manually update the state here as the Socket.io
+            // will broadcast the updated entries to all connected clients
             addMessageToQueue({ text: 'Entry deleted successfully', type: 'success' });
         } catch (error) {
             console.error('Error deleting entry:', error);
@@ -62,21 +127,28 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
     };
 
     const handleEdit = (id) => {
+        const entry = sortedEntries.find(entry => entry.id === id);
         setEditableEntryId(id);
-        setEditingEntry(sortedEntries.find(entry => entry.id === id));
-        setIsEditing(true); // Set editing state to true
-        setIsEditingLocal(true); // Set local editing state to true
+        setEditingEntry(entry);
+        setEditValues(entry); // Store the current values for editing
+        setIsEditing(true);
+        setIsEditingLocal(true);
     };
 
     const handleApply = () => {
+        // Apply the local edit values to the sortedEntries
+        const newEntries = sortedEntries.map(entry =>
+            entry.id === editableEntryId ? {...entry, ...editValues} : entry
+        );
+        setSortedEntries(newEntries);
         setEditableEntryId(null);
         handleSave();
-        setIsEditing(false); // Set editing state to false
-        setIsEditingLocal(false); // Set local editing state to false
+        setIsEditing(false);
+        setIsEditingLocal(false);
     };
 
     const handleCancel = () => {
-        setSortedEntries(sortedEntries.map(entry => 
+        setSortedEntries(sortedEntries.map(entry =>
             entry.id === editableEntryId ? editingEntry : entry
         ));
         setEditableEntryId(null);
@@ -97,73 +169,158 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
             Header: 'ID',
             accessor: 'id',
             Cell: ({ value, row }) => (
-                <input 
-                    type="text" 
-                    value={value} 
-                    onChange={(e) => handleInputChange(row.original.id, 'id', e.target.value)} 
-                    disabled={editableEntryId !== row.original.id}
-                />
+                <div>
+                    <input 
+                        type="text" 
+                        value={value} 
+                        disabled={true} // Make the ID field non-editable
+                        ref={el => {
+                            if (!inputRefs.current[row.original.id]) {
+                                inputRefs.current[row.original.id] = {};
+                            }
+                            inputRefs.current[row.original.id].id = el;
+                        }}
+                    />
+                    {editableEntryId === row.original.id && errors.id && <span className="error">{errors.id}</span>}
+                </div>
             ),
         },
         {
             Header: 'Name',
             accessor: 'name',
-            Cell: ({ value, row }) => (
-                <input 
-                    type="text" 
-                    value={value} 
-                    onChange={(e) => handleInputChange(row.original.id, 'name', e.target.value)} 
-                    disabled={editableEntryId !== row.original.id}
-                />
-            ),
+            Cell: ({ value, row }) => {
+                const displayValue = editableEntryId === row.original.id && editValues[row.original.id]
+                    ? editValues[row.original.id].name
+                    : value;
+                    
+                return (
+                    <div>
+                        <input 
+                            type="text" 
+                            value={displayValue} 
+                            onChange={(e) => handleInputChange(row.original.id, 'name', e.target.value)} 
+                            disabled={editableEntryId !== row.original.id}
+                            ref={el => {
+                                if (el) {
+                                    if (!inputRefs.current[row.original.id]) {
+                                        inputRefs.current[row.original.id] = {};
+                                    }
+                                    inputRefs.current[row.original.id].name = el;
+                                }
+                            }}
+                        />
+                        {editableEntryId === row.original.id && errors.name && <span className="error">{errors.name}</span>}
+                    </div>
+                );
+            }
         },
         {
             Header: 'Surname',
             accessor: 'surname',
-            Cell: ({ value, row }) => (
-                <input 
-                    type="text" 
-                    value={value} 
-                    onChange={(e) => handleInputChange(row.original.id, 'surname', e.target.value)} 
-                    disabled={editableEntryId !== row.original.id}
-                />
-            ),
+            Cell: ({ value, row }) => {
+                const displayValue = editableEntryId === row.original.id && editValues[row.original.id]
+                    ? editValues[row.original.id].surname
+                    : value;
+                    
+                return (
+                    <div>
+                        <input 
+                            type="text" 
+                            value={displayValue} 
+                            onChange={(e) => handleInputChange(row.original.id, 'surname', e.target.value)} 
+                            disabled={editableEntryId !== row.original.id}
+                            ref={el => {
+                                if (!inputRefs.current[row.original.id]) {
+                                    inputRefs.current[row.original.id] = {};
+                                }
+                                inputRefs.current[row.original.id].surname = el;
+                            }}
+                        />
+                        {editableEntryId === row.original.id && errors.surname && <span className="error">{errors.surname}</span>}
+                    </div>
+                );
+            }
         },
         {
             Header: 'Age',
             accessor: 'age',
-            Cell: ({ value, row }) => (
-                <input 
-                    type="number" 
-                    value={value} 
-                    onChange={(e) => handleInputChange(row.original.id, 'age', e.target.value)} 
-                    disabled={editableEntryId !== row.original.id}
-                />
-            ),
+            Cell: ({ value, row }) => {
+                const displayValue = editableEntryId === row.original.id && editValues[row.original.id]
+                    ? editValues[row.original.id].age
+                    : value;
+                    
+                return (
+                    <div>
+                        <input 
+                            type="number" 
+                            value={displayValue} 
+                            onChange={(e) => handleInputChange(row.original.id, 'age', e.target.value)} 
+                            disabled={editableEntryId !== row.original.id}
+                            ref={el => {
+                                if (!inputRefs.current[row.original.id]) {
+                                    inputRefs.current[row.original.id] = {};
+                                }
+                                inputRefs.current[row.original.id].age = el;
+                            }}
+                        />
+                        {editableEntryId === row.original.id && errors.age && <span className="error">{errors.age}</span>}
+                    </div>
+                );
+            }
         },
         {
             Header: 'Phone',
             accessor: 'phone',
-            Cell: ({ value, row }) => (
-                <input 
-                    type="text" 
-                    value={value} 
-                    onChange={(e) => handleInputChange(row.original.id, 'phone', e.target.value)} 
-                    disabled={editableEntryId !== row.original.id}
-                />
-            ),
+            Cell: ({ value, row }) => {
+                const displayValue = editableEntryId === row.original.id && editValues[row.original.id]
+                    ? editValues[row.original.id].phone
+                    : value;
+                    
+                return (
+                    <div>
+                        <input 
+                            type="text" 
+                            value={displayValue} 
+                            onChange={(e) => handleInputChange(row.original.id, 'phone', e.target.value)} 
+                            disabled={editableEntryId !== row.original.id}
+                            ref={el => {
+                                if (!inputRefs.current[row.original.id]) {
+                                    inputRefs.current[row.original.id] = {};
+                                }
+                                inputRefs.current[row.original.id].phone = el;
+                            }}
+                        />
+                        {editableEntryId === row.original.id && errors.phone && <span className="error">{errors.phone}</span>}
+                    </div>
+                );
+            }
         },
         {
             Header: 'Address',
             accessor: 'address',
-            Cell: ({ value, row }) => (
-                <input 
-                    type="text" 
-                    value={value} 
-                    onChange={(e) => handleInputChange(row.original.id, 'address', e.target.value)} 
-                    disabled={editableEntryId !== row.original.id}
-                />
-            ),
+            Cell: ({ value, row }) => {
+                const displayValue = editableEntryId === row.original.id && editValues[row.original.id]
+                    ? editValues[row.original.id].address
+                    : value;
+                    
+                return (
+                    <div>
+                        <input 
+                            type="text" 
+                            value={displayValue} 
+                            onChange={(e) => handleInputChange(row.original.id, 'address', e.target.value)} 
+                            disabled={editableEntryId !== row.original.id}
+                            ref={el => {
+                                if (!inputRefs.current[row.original.id]) {
+                                    inputRefs.current[row.original.id] = {};
+                                }
+                                inputRefs.current[row.original.id].address = el;
+                            }}
+                        />
+                        {editableEntryId === row.original.id && errors.address && <span className="error">{errors.address}</span>}
+                    </div>
+                );
+            }
         },
         {
             Header: 'Actions',
@@ -203,7 +360,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                 </>
             ),
         },
-    ], [editableEntryId, sortedEntries]);
+    ], [editableEntryId, sortedEntries, errors, editValues]);
 
     const data = useMemo(() => sortedEntries, [sortedEntries]);
 

@@ -36,6 +36,15 @@ class UserController extends Controller
 
         User::create($validated);
         
+        // Get all entries to broadcast
+        $entries = User::all();
+        
+        // Notify Socket.io server about the change
+        $client = new \GuzzleHttp\Client();
+        $client->post('http://localhost:4000/api/update-entries', [
+            'json' => ['entries' => $entries]
+        ]);
+        
         if ($request->ajax()) {
             return response()->json(['success' => __('validation.success.created')]);
         }
@@ -46,6 +55,12 @@ class UserController extends Controller
     public function deleteAll()
     {
         User::truncate();
+        
+        // Notify Socket.io server about the change
+        $client = new \GuzzleHttp\Client();
+        $client->post('http://localhost:4000/api/update-entries', [
+            'json' => ['entries' => []]
+        ]);
         
         if (request()->ajax()) {
             return response()->json(['success' => __('validation.success.all_deleted')]);
@@ -68,32 +83,24 @@ class UserController extends Controller
         return response()->json(['message' => __('entryEdit.success.created')], 200);
     }
 
-    //public function destroy(User $user)
-   // {
-      //  try {
-      //      $user->delete();
-            
-       //     if (request()->ajax()) {
-       //         return response()->json(['success' => __('validation.success.deleted')]);
-       //     }
-            
-       //     return redirect()->route('users.index')->with('success', __('validation.success.deleted'));
-       // } catch (\Exception $e) {
-        //    if (request()->ajax()) {
-       //         return response()->json(['error' => 'Error deleting record'], 500);
-       //     }
-            
-        //    return redirect()->route('users.index')->with('error', 'Error deleting record');
-      //  }
-    //}
     public function destroy($id)
-{
-    try {
-        $user = User::findOrFail($id);
-        $user->delete();
-        return response()->json(['success' => 'Entry deleted successfully']);
-    } catch (\Exception $e) {
-        return response()->json(['error' => 'Error deleting entry'], 500);
+    {
+        try {
+            $user = User::findOrFail($id);
+            $user->delete();
+            
+            // Get all remaining entries to broadcast
+            $entries = User::all();
+            
+            // Notify Socket.io server about the change
+            $client = new \GuzzleHttp\Client();
+            $client->post('http://localhost:4000/api/update-entries', [
+                'json' => ['entries' => $entries]
+            ]);
+            
+            return response()->json(['success' => 'Entry deleted successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error deleting entry: ' . $e->getMessage()], 500);
+        }
     }
-}
 }

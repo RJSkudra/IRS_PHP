@@ -1,23 +1,23 @@
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
-import cors from 'cors'; // Import the cors middleware
+import cors from 'cors';
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "*", // Allow all origins
-        methods: ["GET", "POST"], // Allow specific methods
-        allowedHeaders: ["Content-Type"], // Allow specific headers
-        credentials: true // Allow credentials
+        origin: "*",
+        methods: ["GET", "POST"],
+        allowedHeaders: ["Content-Type"],
+        credentials: true
     }
 });
 
 app.use(express.json());
-app.use(cors()); // Enable CORS for all routes
+app.use(cors());
 
-let entries = []; // Your entries data
+let entries = [];
 
 app.post('/api/update-entries', (req, res) => {
     entries = req.body.entries;
