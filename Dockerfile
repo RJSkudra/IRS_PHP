@@ -19,8 +19,8 @@ RUN apt-get update && apt-get install -y \
     libonig-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Node.js properly
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+# Install Node.js properly (using LTS version)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -40,7 +40,7 @@ RUN composer install --no-scripts --no-autoloader
 COPY package.json package-lock.json ./
 
 # Install npm dependencies
-RUN npm install
+RUN npm ci
 
 # Copy existing application directory contents
 COPY . .
@@ -60,7 +60,8 @@ EXPOSE 9000 3000 4000
 # Add environment variable for configuration
 ENV APP_PORT=9000 \
     NODE_SERVER_PORT=4000 \
-    VITE_PORT=3000
+    VITE_PORT=3000 \
+    HOST=0.0.0.0
 
-# Start services (consider moving this to docker-compose)
+# Start services
 CMD ["sh", "-c", "node resources/js/server.js & npm run dev & php artisan serve --host=0.0.0.0 --port=$APP_PORT"]
