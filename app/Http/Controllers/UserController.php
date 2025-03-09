@@ -74,15 +74,57 @@ class UserController extends Controller
     public function updateEntries(Request $request)
     {
         $entries = $request->input('entries');
+        $updatedEntries = [];
         
         foreach ($entries as $entryData) {
             $entry = User::find($entryData['id']);
             if ($entry) {
-                $entry->update($entryData);
+                // Validate the input data
+                $validated = $this->validateEntryData($entryData);
+                
+                // Update only if validation passes
+                if ($validated) {
+                    $entry->update($entryData);
+                    $updatedEntries[] = $entry;
+                }
             }
+        }
+        
+        // Notify Socket.io server if any entries were updated
+        if (!empty($updatedEntries)) {
+            $this->socketService->updateEntries(User::all());
         }
 
         return response()->json(['message' => __('entryEdit.success.created')], 200);
+    }
+
+    private function validateEntryData($entryData)
+    {
+        // Only validate if the field exists in the input data
+        $rules = [];
+        
+        if (isset($entryData['name'])) {
+            $rules['name'] = 'required|regex:/^[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ\- ]{2,50}$/u';
+        }
+        
+        if (isset($entryData['surname'])) {
+            $rules['surname'] = 'required|regex:/^[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ\- ]{2,50}$/u';
+        }
+        
+        if (isset($entryData['age'])) {
+            $rules['age'] = 'required|integer|min:0|max:200';
+        }
+        
+        if (isset($entryData['phone'])) {
+            $rules['phone'] = 'required|regex:/^[0-9]{8}$/';
+        }
+        
+        if (isset($entryData['address'])) {
+            $rules['address'] = 'required|regex:/^(?=.*[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ])(?=.*[0-9])[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ0-9\s,.-]+$/u';
+        }
+        
+        $validator = \Illuminate\Support\Facades\Validator::make($entryData, $rules);
+        return !$validator->fails();
     }
 
     public function destroy($id)

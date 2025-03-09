@@ -7,6 +7,7 @@ import TableComponent from './TableComponent';
 import DetailedView from './DetailedView';
 import validationMessages from '../../lang/lv/validationMessages';
 import MessageQueue from './MessageQueue';
+import { validateField, validateForm, areAllFieldsFilled } from '../utils/Validation';
 
 const socket = io('http://localhost:4000'); // Ensure the correct server URL
 
@@ -128,55 +129,13 @@ const UserForm = () => {
             ...errors,
             [name]: error
         });
-    };
-
-    const validateField = (name, value) => {
-        let error = '';
-        switch (name) {
-            case 'name':
-            case 'surname':
-                if (!value.trim()) {
-                    error = validationMessages[name].required;
-                } else if (!/^[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ\- ]+$/u.test(value)) {
-                    error = validationMessages[name].regex;
-                } else if (value.length < 2 || value.length > 50) {
-                    error = validationMessages[name].length;
-                }
-                break;
-            case 'age':
-                if (!value.trim()) {
-                    error = validationMessages.age.required;
-                } else if (!/^(0|[1-9]\d*)$/.test(value)) {
-                    error = validationMessages.age.integer;
-                } else if (value < 0) {
-                    error = validationMessages.age.min;
-                } else if (value > 200) {
-                    error = validationMessages.age.max;
-                }
-                break;
-            case 'phone':
-                if (!value.trim()) {
-                    error = validationMessages.phone.required;
-                } else if (!/^[0-9]{8}$/.test(value)) {
-                    error = validationMessages.phone.regex;
-                }
-                break;
-            case 'address':
-                if (!value.trim()) {
-                    error = validationMessages.address.required;
-                } else if (!/^(?=.*[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ])(?=.*[0-9])[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ0-9\s,.-]+$/u.test(value)) {
-                    error = validationMessages.address.regex;
-                }
-                break;
-            default:
-                break;
-        }
-        return error;
+        
+        checkFormValidity();
     };
 
     const checkFormValidity = () => {
-        const isValid = Object.values(formData).every(value => value.trim() !== '') &&
-                        Object.values(errors).every(error => error === '');
+        // Replace isFormValid(formData) with validateForm(formData) to avoid the naming conflict
+        const isValid = areAllFieldsFilled(formData) && validateForm(formData);
         setIsFormValid(isValid);
     };
 

@@ -4,6 +4,7 @@ import { useTable, useSortBy, useResizeColumns, useFlexLayout } from 'react-tabl
 import 'react-resizable/css/styles.css';
 import MessageQueue from './MessageQueue';
 import validationMessages from '../../lang/lv/validationMessages';
+import { validateField } from '../utils/Validation'; // Import the validation utility
 
 const DetailedView = ({ onClose, entries, setIsEditing }) => {
     const [editableEntryId, setEditableEntryId] = useState(null);
@@ -11,9 +12,9 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
     const [originalEntries, setOriginalEntries] = useState(entries);
     const [editingEntry, setEditingEntry] = useState(null);
     const [messageQueue, setMessageQueue] = useState([]);
-    const [isEditing, setIsEditingLocal] = useState(false); // New state variable
+    const [isEditing, setIsEditingLocal] = useState(false);
     const [errors, setErrors] = useState({});
-    const inputRefs = useRef({}); // Create a ref object to store input references
+    const inputRefs = useRef({});
     const [editValues, setEditValues] = useState({});
 
     useEffect(() => {
@@ -23,61 +24,17 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
         }
     }, [entries, isEditing]);
 
-    const validateField = (name, value) => {
-        let error = '';
-        switch (name) {
-            case 'name':
-            case 'surname':
-                if (!value.trim()) {
-                    error = validationMessages[name].required;
-                } else if (!/^[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ\- ]+$/u.test(value)) {
-                    error = validationMessages[name].regex;
-                } else if (value.length < 2 || value.length > 50) {
-                    error = validationMessages[name].length;
-                }
-                break;
-            case 'age':
-                if (!value.trim()) {
-                    error = validationMessages.age.required;
-                } else if (!/^(0|[1-9]\d*)$/.test(value)) {
-                    error = validationMessages.age.integer;
-                } else if (value < 0) {
-                    error = validationMessages.age.min;
-                } else if (value > 200) {
-                    error = validationMessages.age.max;
-                }
-                break;
-            case 'phone':
-                if (!value.trim()) {
-                    error = validationMessages.phone.required;
-                } else if (!/^[0-9]{8}$/.test(value)) {
-                    error = validationMessages.phone.regex;
-                }
-                break;
-            case 'address':
-                if (!value.trim()) {
-                    error = validationMessages.address.required;
-                } else if (!/^(?=.*[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ])(?=.*[0-9])[a-zA-ZāĀēĒīĪōŌūŪčČšŠžŽņŅģĢķĶļĻŗŖ0-9\s,.-]+$/u.test(value)) {
-                    error = validationMessages.address.regex;
-                }
-                break;
-            default:
-                break;
-        }
-        return error;
-    };
-
     const handleInputChange = (id, field, value) => {
-        // Update only the local edit values
+        // Update the field in edit values while preserving other fields
         setEditValues(prev => ({
             ...prev,
             [id]: {
-                ...prev[id],
+                ...(prev[id] || {}),
                 [field]: value
             }
         }));
         
-        // Validate and set errors
+        // Validate and set errors for this specific field
         const error = validateField(field, value);
         setErrors(prevErrors => ({
             ...prevErrors,
@@ -94,7 +51,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
         try {
             const response = await axios.post('/api/update-entries', { entries: sortedEntries });
             if (response.status === 200) {
-                setOriginalEntries(sortedEntries); // Update originalEntries only if save is successful
+                setOriginalEntries(sortedEntries);
                 addMessageToQueue({ text: 'Entries updated successfully', type: 'success' });
             } else {
                 console.error('Unexpected response:', response);
@@ -117,8 +74,6 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
     const handleDelete = async (id) => {
         try {
             await axios.delete(`/delete/${id}`);
-            // No need to manually update the state here as the Socket.io
-            // will broadcast the updated entries to all connected clients
             addMessageToQueue({ text: 'Entry deleted successfully', type: 'success' });
         } catch (error) {
             console.error('Error deleting entry:', error);
@@ -129,22 +84,81 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
     const handleEdit = (id) => {
         const entry = sortedEntries.find(entry => entry.id === id);
         setEditableEntryId(id);
-        setEditingEntry(entry);
-        setEditValues(entry); // Store the current values for editing
+        setEditingEntry({...entry});
+        
+        // Initialize editValues with the complete entry data
+        setEditValues(prev => ({
+            ...prev,
+            [id]: {...entry}
+        }));
+        
         setIsEditing(true);
         setIsEditingLocal(true);
     };
 
-    const handleApply = () => {
-        // Apply the local edit values to the sortedEntries
-        const newEntries = sortedEntries.map(entry =>
-            entry.id === editableEntryId ? {...entry, ...editValues} : entry
-        );
-        setSortedEntries(newEntries);
-        setEditableEntryId(null);
-        handleSave();
-        setIsEditing(false);
-        setIsEditingLocal(false);
+    const handleApply = async () => {
+        // Create entry with updated values
+        const updatedEntry = {
+            ...sortedEntries.find(entry => entry.id === editableEntryId),
+            ...editValues[editableEntryId]
+        };
+        
+        // Check for validation errors
+        const fieldErrors = {};
+        Object.entries(updatedEntry).forEach(([key, value]) => {
+            // Skip validation for id field
+            if (key !== 'id') {
+                // Ensure value is a string before validation
+                const stringValue = value === null || value === undefined ? '' : String(value);
+                const error = validateField(key, stringValue);
+                if (error) {
+                    fieldErrors[key] = error;
+                }
+            }
+        });
+
+        // If there are errors, show them and don't proceed
+        if (Object.keys(fieldErrors).length > 0) {
+            setErrors(fieldErrors);
+            addMessageToQueue({ text: 'Please fix validation errors before saving.', type: 'error' });
+            return;
+        }
+        
+        try {
+            const response = await axios.post('/api/update-entries', { 
+                entries: [updatedEntry] // Only send the changed entry
+            });
+            
+            if (response.status === 200) {
+                // Update local state after successful save
+                const updatedEntries = sortedEntries.map(entry => 
+                    entry.id === editableEntryId ? updatedEntry : entry
+                );
+                setSortedEntries(updatedEntries);
+                setOriginalEntries(updatedEntries);
+                addMessageToQueue({ text: 'Entry updated successfully', type: 'success' });
+                
+                // Reset editing state
+                setEditableEntryId(null);
+                setEditValues(prev => {
+                    const newValues = {...prev};
+                    delete newValues[editableEntryId];
+                    return newValues;
+                });
+                setIsEditing(false);
+                setIsEditingLocal(false);
+                setErrors({});
+            } else {
+                console.error('Unexpected response:', response);
+                addMessageToQueue({ text: 'Unexpected response from the server', type: 'error' });
+            }
+        } catch (error) {
+            console.error('Error updating entry:', error);
+            addMessageToQueue({ 
+                text: error.response?.data?.message || 'Error updating entry', 
+                type: 'error' 
+            });
+        }
     };
 
     const handleCancel = () => {
@@ -152,8 +166,8 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
             entry.id === editableEntryId ? editingEntry : entry
         ));
         setEditableEntryId(null);
-        setIsEditing(false); // Set editing state to false
-        setIsEditingLocal(false); // Set local editing state to false
+        setIsEditing(false);
+        setIsEditingLocal(false);
     };
 
     const addMessageToQueue = (message) => {
@@ -173,7 +187,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                     <input 
                         type="text" 
                         value={value} 
-                        disabled={true} // Make the ID field non-editable
+                        disabled={true}
                         ref={el => {
                             if (!inputRefs.current[row.original.id]) {
                                 inputRefs.current[row.original.id] = {};
@@ -189,9 +203,13 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
             Header: 'Name',
             accessor: 'name',
             Cell: ({ value, row }) => {
-                const displayValue = editableEntryId === row.original.id && editValues[row.original.id]
-                    ? editValues[row.original.id].name
+                const fieldName = 'name';
+                const displayValue = editableEntryId === row.original.id && editValues[row.original.id]?.[fieldName] !== undefined
+                    ? editValues[row.original.id][fieldName]
                     : value;
+                    
+                // Get field-specific error from editableEntryId
+                const fieldError = editableEntryId === row.original.id && errors[fieldName] ? errors[fieldName] : null;
                     
                 return (
                     <div>
@@ -209,7 +227,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                                 }
                             }}
                         />
-                        {editableEntryId === row.original.id && errors.name && <span className="error">{errors.name}</span>}
+                        {fieldError && <span className="error">{fieldError}</span>}
                     </div>
                 );
             }
@@ -218,9 +236,13 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
             Header: 'Surname',
             accessor: 'surname',
             Cell: ({ value, row }) => {
-                const displayValue = editableEntryId === row.original.id && editValues[row.original.id]
-                    ? editValues[row.original.id].surname
+                const fieldName = 'surname';
+                const displayValue = editableEntryId === row.original.id && editValues[row.original.id]?.[fieldName] !== undefined
+                    ? editValues[row.original.id][fieldName]
                     : value;
+                    
+                // Get field-specific error from editableEntryId
+                const fieldError = editableEntryId === row.original.id && errors[fieldName] ? errors[fieldName] : null;
                     
                 return (
                     <div>
@@ -236,7 +258,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                                 inputRefs.current[row.original.id].surname = el;
                             }}
                         />
-                        {editableEntryId === row.original.id && errors.surname && <span className="error">{errors.surname}</span>}
+                        {fieldError && <span className="error">{fieldError}</span>}
                     </div>
                 );
             }
@@ -245,9 +267,13 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
             Header: 'Age',
             accessor: 'age',
             Cell: ({ value, row }) => {
-                const displayValue = editableEntryId === row.original.id && editValues[row.original.id]
-                    ? editValues[row.original.id].age
+                const fieldName = 'age';
+                const displayValue = editableEntryId === row.original.id && editValues[row.original.id]?.[fieldName] !== undefined
+                    ? editValues[row.original.id][fieldName]
                     : value;
+                    
+                // Get field-specific error from editableEntryId
+                const fieldError = editableEntryId === row.original.id && errors[fieldName] ? errors[fieldName] : null;
                     
                 return (
                     <div>
@@ -263,7 +289,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                                 inputRefs.current[row.original.id].age = el;
                             }}
                         />
-                        {editableEntryId === row.original.id && errors.age && <span className="error">{errors.age}</span>}
+                        {fieldError && <span className="error">{fieldError}</span>}
                     </div>
                 );
             }
@@ -272,9 +298,13 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
             Header: 'Phone',
             accessor: 'phone',
             Cell: ({ value, row }) => {
-                const displayValue = editableEntryId === row.original.id && editValues[row.original.id]
-                    ? editValues[row.original.id].phone
+                const fieldName = 'phone';
+                const displayValue = editableEntryId === row.original.id && editValues[row.original.id]?.[fieldName] !== undefined
+                    ? editValues[row.original.id][fieldName]
                     : value;
+                    
+                // Get field-specific error from editableEntryId
+                const fieldError = editableEntryId === row.original.id && errors[fieldName] ? errors[fieldName] : null;
                     
                 return (
                     <div>
@@ -290,7 +320,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                                 inputRefs.current[row.original.id].phone = el;
                             }}
                         />
-                        {editableEntryId === row.original.id && errors.phone && <span className="error">{errors.phone}</span>}
+                        {fieldError && <span className="error">{fieldError}</span>}
                     </div>
                 );
             }
@@ -299,9 +329,13 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
             Header: 'Address',
             accessor: 'address',
             Cell: ({ value, row }) => {
-                const displayValue = editableEntryId === row.original.id && editValues[row.original.id]
-                    ? editValues[row.original.id].address
+                const fieldName = 'address';
+                const displayValue = editableEntryId === row.original.id && editValues[row.original.id]?.[fieldName] !== undefined
+                    ? editValues[row.original.id][fieldName]
                     : value;
+                    
+                // Get field-specific error from editableEntryId
+                const fieldError = editableEntryId === row.original.id && errors[fieldName] ? errors[fieldName] : null;
                     
                 return (
                     <div>
@@ -317,7 +351,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                                 inputRefs.current[row.original.id].address = el;
                             }}
                         />
-                        {editableEntryId === row.original.id && errors.address && <span className="error">{errors.address}</span>}
+                        {fieldError && <span className="error">{fieldError}</span>}
                     </div>
                 );
             }
