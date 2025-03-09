@@ -1,13 +1,21 @@
-// server.js
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
+const cors = require('cors'); // Import the cors middleware
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = socketIo(server, {
+    cors: {
+        origin: "*", // Allow all origins
+        methods: ["GET", "POST"], // Allow specific methods
+        allowedHeaders: ["Content-Type"], // Allow specific headers
+        credentials: true // Allow credentials
+    }
+});
 
 app.use(express.json());
+app.use(cors()); // Enable CORS for all routes
 
 let entries = []; // Your entries data
 

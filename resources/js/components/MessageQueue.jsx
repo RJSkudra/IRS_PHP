@@ -1,45 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-const MessageQueue = ({ messages, removeMessage }) => {
-    const [visibleMessages, setVisibleMessages] = useState(messages);
-
-    useEffect(() => {
-        setVisibleMessages(messages);
+const MessageQueue = ({ messages }) => {
+    React.useEffect(() => {
+        const displayedMessages = new Set();
+        messages.forEach(message => {
+            if (!displayedMessages.has(message.id)) {
+                displayedMessages.add(message.id);
+                if (message.type === 'success') {
+                    toast.success(message.text);
+                } else if (message.type === 'error') {
+                    toast.error(message.text);
+                }
+            }
+        });
     }, [messages]);
 
-    useEffect(() => {
-        const timers = visibleMessages.map((message, index) =>
-            setTimeout(() => {
-                setVisibleMessages((prevMessages) => {
-                    const newMessages = [...prevMessages];
-                    newMessages[index] = { ...newMessages[index], fadeOut: true };
-                    return newMessages;
-                });
-                setTimeout(() => removeMessage(index), 300); // Delay removal from parent state to allow CSS transition
-            }, 3000)
-        );
-        return () => timers.forEach(timer => clearTimeout(timer));
-    }, [visibleMessages, removeMessage]);
-
-    const handleRemoveMessage = (index) => {
-        setVisibleMessages((prevMessages) => {
-            const newMessages = [...prevMessages];
-            newMessages[index] = { ...newMessages[index], fadeOut: true };
-            return newMessages;
-        });
-        setTimeout(() => removeMessage(index), 300); // Delay removal from parent state to allow CSS transition
-    };
-
-    return (
-        <div className="message-container bottom-right">
-            {visibleMessages.map((message, index) => (
-                <div key={index} className={`message ${message.type} ${message.fadeOut ? 'fade-out' : ''}`}>
-                    {message.text}
-                    <button onClick={() => handleRemoveMessage(index)} className="close-button">x</button>
-                </div>
-            ))}
-        </div>
-    );
+    return <ToastContainer position="bottom-right" />;
 };
 
 export default MessageQueue;

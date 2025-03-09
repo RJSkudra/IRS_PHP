@@ -8,7 +8,7 @@ import DetailedView from './DetailedView';
 import validationMessages from '../../lang/lv/validationMessages';
 import MessageQueue from './MessageQueue';
 
-const socket = io('http://localhost:4000'); // Connect to the server
+const socket = io(window.location.origin); // Connect to the server using the same origin
 
 const UserForm = () => {
     const [formData, setFormData] = useState({
@@ -204,7 +204,7 @@ const UserForm = () => {
                 <DetailedView onClose={() => setShowDetailedView(false)} entries={entries} setIsEditing={setIsEditing} />
             )}
             <MessageQueue messages={messageQueue} removeMessage={removeMessage} />
-            <button onClick={toggleDarkMode} className="button toggle-button" style={{ zIndex: 999 }}>
+            <button onClick={toggleDarkMode} className="button toggle-button" style={{ zIndex: 1005 }}>
                 <i className={darkMode ? 'fas fa-sun' : 'fas fa-moon'}></i>
             </button>
             <FormComponent
