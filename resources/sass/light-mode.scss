@@ -439,3 +439,29 @@ body {
 .resizer:hover {
     cursor: col-resize;
 }
+
+
+body {
+    background-color: #fff;
+    color: #000;
+}
+
+.message {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    color: #000;
+}
+
+.message.success {
+    background-color: #4caf50;
+    color: white;
+}
+
+.message.error {
+    background-color: #f44336;
+    color: white;
+}
+
+.close-button {
+    color: white;
+}

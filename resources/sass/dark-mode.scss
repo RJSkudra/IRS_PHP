@@ -240,3 +240,79 @@ body.dark-mode {
         }
     }
 }
+
+// Dark mode styling
+body.dark-mode {
+    background-color: #121212;
+    color: #e0e0e0;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+body.dark-mode .message {
+    background-color: #333;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+body.dark-mode .message.success {
+    background-color: #388e3c;
+}
+
+body.dark-mode .message.error {
+    background-color: #d32f2f;
+}
+
+body.dark-mode .close-button {
+    color: #e0e0e0;
+}
+
+// Additional dark mode styles
+body.dark-mode .button {
+    background-color: #444;
+    color: #e0e0e0;
+    border: 1px solid #555;
+}
+
+body.dark-mode .button:hover {
+    background-color: #555;
+}
+
+body.dark-mode .toggle-button {
+    background-color: #444;
+    color: #e0e0e0;
+}
+
+body.dark-mode .toggle-button:hover {
+    background-color: #555;
+}
+
+body.dark-mode .table {
+    background-color: #333;
+    color: #e0e0e0;
+    border: 1px solid #555;
+}
+
+body.dark-mode .table th,
+body.dark-mode .table td {
+    border: 1px solid #555;
+}
+
+body.dark-mode .form-component {
+    background-color: #333;
+    color: #e0e0e0;
+    border: 1px solid #555;
+}
+
+body.dark-mode .form-component input,
+body.dark-mode .form-component select,
+body.dark-mode .form-component textarea {
+    background-color: #444;
+    color: #e0e0e0;
+    border: 1px solid #555;
+}
+
+body.dark-mode .form-component input::placeholder,
+body.dark-mode .form-component select::placeholder,
+body.dark-mode .form-component textarea::placeholder {
+    color: #aaa;
+}
