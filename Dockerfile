@@ -16,12 +16,13 @@ RUN apt-get update && apt-get install -y \
     unzip \
     git \
     curl \
-    nodejs \
-    npm \
-    libonig-dev
+    libonig-dev && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+# Install Node.js properly
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
@@ -29,23 +30,37 @@ RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Copy composer.json and composer.lock first to leverage Docker cache
+COPY composer.json composer.lock ./
+
+# Install Composer dependencies
+RUN composer install --no-scripts --no-autoloader
+
+# Copy package.json and package-lock.json
+COPY package.json package-lock.json ./
+
+# Install npm dependencies
+RUN npm install
+
 # Copy existing application directory contents
-COPY . /var/www
+COPY . .
+
+# Generate optimized Composer autoload files
+RUN composer dump-autoload --optimize
 
 # Set correct permissions for the working directory
 RUN chown -R www-data:www-data /var/www
 
-# Install Composer dependencies
-RUN composer install
-
-# Install npm dependencies and build assets
-RUN npm install
-
 # Change current user to www-data
 USER www-data
 
-# Expose port 9000 for php-fpm and port 3000 for npm
+# Expose ports
 EXPOSE 9000 3000 4000
 
-# Start npm and php artisan serve
-CMD ["sh", "-c", "node resources/js/server.js & npm run dev & php artisan serve --host=0.0.0.0 --port=9000"]
+# Add environment variable for configuration
+ENV APP_PORT=9000 \
+    NODE_SERVER_PORT=4000 \
+    VITE_PORT=3000
+
+# Start services (consider moving this to docker-compose)
+CMD ["sh", "-c", "node resources/js/server.js & npm run dev & php artisan serve --host=0.0.0.0 --port=$APP_PORT"]
