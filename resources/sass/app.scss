@@ -1,6 +1,8 @@
 // Variables
 @use 'variables' as vars;
-
+// Import light and dark mode styles
+@use 'light-mode';
+@use 'dark-mode';
 // Tailwind CSS
 @tailwind base;
 @tailwind components;
@@ -16,9 +18,7 @@
     padding: 0;
 }
 
-// Import light and dark mode styles
-@import 'light-mode';
-@import 'dark-mode';
+
 
 .message-container.bottom-right {
     position: fixed;
