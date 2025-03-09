@@ -195,18 +195,43 @@ const UserForm = () => {
                 const response = await axios.post('http://localhost:8000/store', formData); // Ensure the correct URL
                 console.log('Form submitted successfully', response.data);
                 addMessageToQueue({ text: validationMessages.success.created, type: 'success' });
+                
+                // Reset form after successful submission
+                setFormData({
+                    name: '',
+                    surname: '',
+                    age: '',
+                    phone: '',
+                    address: ''
+                });
+                setTouched({});
+                
                 fetchEntries();
             } catch (error) {
                 console.error('Error submitting form:', error);
-                addMessageToQueue({ text: 'Error submitting form', type: 'error' });
+                if (error.response && error.response.data && error.response.data.message) {
+                    addMessageToQueue({ text: error.response.data.message, type: 'error' });
+                } else {
+                    addMessageToQueue({ text: 'Error submitting form', type: 'error' });
+                }
             }
         }
     };
 
     const addMessageToQueue = (message) => {
-        setMessageQueue(prevQueue => [...prevQueue, message]);
+        const messageWithId = {
+            ...message,
+            id: Date.now() // Add a unique timestamp-based ID
+        };
+        setMessageQueue(prevQueue => [...prevQueue, messageWithId]);
+        
+        // Auto-remove messages after they've been displayed
+        setTimeout(() => {
+            setMessageQueue(prevQueue => prevQueue.filter(msg => msg.id !== messageWithId.id));
+        }, 5000); // Remove after 5 seconds
     };
 
+    // The removeMessage function can stay but will be less needed with auto-removal
     const removeMessage = (index) => {
         setMessageQueue(prevQueue => prevQueue.filter((_, i) => i !== index));
     };
