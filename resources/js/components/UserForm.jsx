@@ -9,7 +9,9 @@ import validationMessages from '../../lang/lv/validationMessages';
 import MessageQueue from './MessageQueue';
 import { validateField, validateForm, areAllFieldsFilled } from '../utils/Validation';
 
-const socket = io('http://localhost:4000'); // Ensure the correct server URL
+// Use environment variables for the Socket.io connection
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:4000';
+const socket = io(SOCKET_URL);
 
 const UserForm = () => {
     const [formData, setFormData] = useState({
@@ -151,7 +153,10 @@ const UserForm = () => {
         setErrors(newErrors);
         if (Object.keys(newErrors).length === 0) {
             try {
-                const response = await axios.post('http://localhost:8000/store', formData); // Ensure the correct URL
+                // Use environment variables for the API URL
+                const API_URL = import.meta.env.VITE_APP_URL || 'http://localhost:8000';
+                const response = await axios.post(`${API_URL}/store`, formData);
+                
                 console.log('Form submitted successfully', response.data);
                 addMessageToQueue({ text: validationMessages.success.created, type: 'success' });
                 
