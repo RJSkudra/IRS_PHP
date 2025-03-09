@@ -1,6 +1,14 @@
 import React from 'react';
 
 const FormComponent = ({ formData, errors, touched, handleChange, handleSubmit, isFormValid, handleDeleteAll }) => {
+    // Custom styling for the submit button based on form validity
+    const submitButtonStyle = {
+        backgroundColor: isFormValid ? '#007bff' : '#ccc',
+        cursor: isFormValid ? 'pointer' : 'not-allowed',
+        opacity: isFormValid ? 1 : 0.7,
+        transition: 'all 0.3s ease'
+    };
+
     return (
         <form onSubmit={handleSubmit} id="userForm" className="form-grid">
             <div className="form-group">
@@ -29,7 +37,14 @@ const FormComponent = ({ formData, errors, touched, handleChange, handleSubmit, 
                 {touched.address && errors.address && <span className="error">{errors.address}</span>}
             </div>
             <div className="button-group full-width">
-                <button type="submit" className="button submit-button" disabled={!isFormValid}>Iesniegt</button>
+                <button 
+                    type="submit" 
+                    className="button submit-button" 
+                    disabled={!isFormValid}
+                    style={submitButtonStyle}
+                >
+                    Iesniegt
+                </button>
             </div>
         </form>
     );
