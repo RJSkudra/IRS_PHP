@@ -430,6 +430,9 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                             })}
                         </tbody>
                     </table>
+                    <div className="footer">
+                        IRS™ © ® 2025
+                    </div>
                 </div>
             </div>
             <MessageQueue messages={messageQueue} removeMessage={removeMessage} />

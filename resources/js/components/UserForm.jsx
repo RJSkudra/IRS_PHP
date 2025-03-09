@@ -221,6 +221,9 @@ const UserForm = () => {
                     handleEditAll={() => setShowDetailedView(true)}
                 />
             )}
+            <div className="footer">
+                IRS™ © ® 2025
+            </div>
         </div>
     );
 };
