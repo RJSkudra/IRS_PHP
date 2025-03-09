@@ -204,7 +204,7 @@ const UserForm = () => {
                 <DetailedView onClose={() => setShowDetailedView(false)} entries={entries} setIsEditing={setIsEditing} />
             )}
             <MessageQueue messages={messageQueue} removeMessage={removeMessage} />
-            <button onClick={toggleDarkMode} className="button toggle-button" style={{ zIndex: 1003 }}>
+            <button onClick={toggleDarkMode} className="button toggle-button" style={{ zIndex: 999 }}>
                 <i className={darkMode ? 'fas fa-sun' : 'fas fa-moon'}></i>
             </button>
             <FormComponent
