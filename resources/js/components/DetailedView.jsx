@@ -4,7 +4,8 @@ import { useTable, useSortBy, useResizeColumns, useFlexLayout } from 'react-tabl
 import 'react-resizable/css/styles.css';
 import MessageQueue from './MessageQueue';
 import validationMessages from '../../lang/lv/validationMessages';
-import { validateField } from '../utils/Validation'; // Import the validation utility
+import detailedViewMessages from '../../lang/lv/detailedViewMessages'; // Import the translations
+import { validateField } from '../utils/Validation';
 
 const DetailedView = ({ onClose, entries, setIsEditing }) => {
     const [editableEntryId, setEditableEntryId] = useState(null);
@@ -66,7 +67,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
 
     const handleSave = async () => {
         if (Object.values(errors).some(error => error)) {
-            addMessageToQueue({ text: 'Please fix validation errors before saving.', type: 'error' });
+            addMessageToQueue({ text: detailedViewMessages.messages.validationError, type: 'error' });
             return;
         }
 
@@ -74,21 +75,23 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
             const response = await axios.post('/api/update-entries', { entries: sortedEntries });
             if (response.status === 200) {
                 setOriginalEntries(sortedEntries);
-                addMessageToQueue({ text: 'Entries updated successfully', type: 'success' });
+                addMessageToQueue({ text: detailedViewMessages.messages.entriesUpdateSuccess, type: 'success' });
             } else {
                 console.error('Unexpected response:', response);
-                addMessageToQueue({ text: 'Unexpected response from the server', type: 'error' });
+                addMessageToQueue({ text: detailedViewMessages.messages.unexpectedResponse, type: 'error' });
             }
         } catch (error) {
             if (error.response) {
                 console.error('Error response:', error.response);
-                addMessageToQueue({ text: `Error updating entries: ${error.response.status} ${error.response.statusText}`, type: 'error' });
+                const errorMessage = detailedViewMessages.messages.errorUpdatingEntries.replace('{0}', `${error.response.status} ${error.response.statusText}`);
+                addMessageToQueue({ text: errorMessage, type: 'error' });
             } else if (error.request) {
                 console.error('Error request:', error.request);
-                addMessageToQueue({ text: 'Error updating entries: No response from server', type: 'error' });
+                addMessageToQueue({ text: detailedViewMessages.messages.errorNoResponse, type: 'error' });
             } else {
                 console.error('Error message:', error.message);
-                addMessageToQueue({ text: `Error updating entries: ${error.message}`, type: 'error' });
+                const errorMessage = detailedViewMessages.messages.errorUpdatingEntries.replace('{0}', error.message);
+                addMessageToQueue({ text: errorMessage, type: 'error' });
             }
         }
     };
@@ -96,10 +99,10 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
     const handleDelete = async (id) => {
         try {
             await axios.delete(`/delete/${id}`);
-            addMessageToQueue({ text: 'Entry deleted successfully', type: 'success' });
+            addMessageToQueue({ text: detailedViewMessages.messages.entryDeleteSuccess, type: 'success' });
         } catch (error) {
             console.error('Error deleting entry:', error);
-            addMessageToQueue({ text: 'Error deleting entry', type: 'error' });
+            addMessageToQueue({ text: detailedViewMessages.messages.errorDeletingEntry, type: 'error' });
         }
     };
 
@@ -142,7 +145,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
         // If there are errors, show them and don't proceed
         if (Object.keys(fieldErrors).length > 0) {
             setErrors(fieldErrors);
-            addMessageToQueue({ text: 'Please fix validation errors before saving.', type: 'error' });
+            addMessageToQueue({ text: detailedViewMessages.messages.validationError, type: 'error' });
             return;
         }
         
@@ -185,7 +188,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                     setSortedEntries(resortedData);
                 }
                 
-                addMessageToQueue({ text: 'Entry updated successfully', type: 'success' });
+                addMessageToQueue({ text: detailedViewMessages.messages.entryUpdateSuccess, type: 'success' });
                 
                 // Reset editing state
                 setEditableEntryId(null);
@@ -199,12 +202,12 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                 setErrors({});
             } else {
                 console.error('Unexpected response:', response);
-                addMessageToQueue({ text: 'Unexpected response from the server', type: 'error' });
+                addMessageToQueue({ text: detailedViewMessages.messages.unexpectedResponse, type: 'error' });
             }
         } catch (error) {
             console.error('Error updating entry:', error);
             addMessageToQueue({ 
-                text: error.response?.data?.message || 'Error updating entry', 
+                text: error.response?.data?.message || detailedViewMessages.messages.errorUpdatingEntries.replace('{0}', ''), 
                 type: 'error' 
             });
         }
@@ -271,7 +274,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
     // Update your columns definition to use the new cell renderer for each field
     const columns = useMemo(() => [
         {
-            Header: 'ID',
+            Header: detailedViewMessages.headers.id,
             accessor: 'id',
             Cell: ({ value, row }) => (
                 <div>
@@ -291,32 +294,32 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
             ),
         },
         {
-            Header: 'Name',
+            Header: detailedViewMessages.headers.name,
             accessor: 'name',
             Cell: ({ value, row }) => cellRenderer({ value, row, fieldName: 'name' })
         },
         {
-            Header: 'Surname',
+            Header: detailedViewMessages.headers.surname,
             accessor: 'surname',
             Cell: ({ value, row }) => cellRenderer({ value, row, fieldName: 'surname' })
         },
         {
-            Header: 'Age',
+            Header: detailedViewMessages.headers.age,
             accessor: 'age',
             Cell: ({ value, row }) => cellRenderer({ value, row, fieldName: 'age' })
         },
         {
-            Header: 'Phone',
+            Header: detailedViewMessages.headers.phone,
             accessor: 'phone',
             Cell: ({ value, row }) => cellRenderer({ value, row, fieldName: 'phone' })
         },
         {
-            Header: 'Address',
+            Header: detailedViewMessages.headers.address,
             accessor: 'address',
             Cell: ({ value, row }) => cellRenderer({ value, row, fieldName: 'address' })
         },
         {
-            Header: 'Actions',
+            Header: detailedViewMessages.headers.actions,
             Cell: ({ row }) => (
                 <div className="action-buttons">
                     {editableEntryId === row.original.id ? (
@@ -325,13 +328,13 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                                 className="apply-button" 
                                 onClick={handleApply}
                             >
-                                Apply
+                                {detailedViewMessages.buttons.apply}
                             </button>
                             <button 
                                 className="cancel-button" 
                                 onClick={handleCancel}
                             >
-                                Cancel
+                                {detailedViewMessages.buttons.cancel}
                             </button>
                         </>
                     ) : (
@@ -340,13 +343,13 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                                 className="edit-button" 
                                 onClick={() => handleEdit(row.original.id)}
                             >
-                                Edit
+                                {detailedViewMessages.buttons.edit}
                             </button>
                             <button 
                                 className="delete-button" 
                                 onClick={() => handleDelete(row.original.id)}
                             >
-                                Delete
+                                {detailedViewMessages.buttons.delete}
                             </button>
                         </>
                     )}
@@ -465,8 +468,8 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
         <div className="detailed-view-overlay">
             <div className="detailed-view">
                 <div className="detailed-view-header">
-                    <button className="close-button" onClick={onClose}>×</button>
-                    <h2>Edit Entries</h2>
+                    <button className="close-button" onClick={onClose}>{detailedViewMessages.buttons.close}</button>
+                    <h2>{detailedViewMessages.titles.editEntries}</h2>
                 </div>
                 <div className="detailed-view-content">
                     <table {...getTableProps()} className="users-table">
@@ -523,7 +526,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                         </tbody>
                     </table>
                     <div className="footer">
-                        IRS™ © ® 2025
+                        {detailedViewMessages.footer}
                     </div>
                 </div>
             </div>
