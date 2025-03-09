@@ -17,3 +17,43 @@
     margin: 0;
     padding: 0;
 }
+
+/* Add to your stylesheet */
+.sortable-header {
+    cursor: pointer;
+    user-select: none;
+    background-color: #f2f2f2;
+    transition: background-color 0.2s;
+}
+
+.sortable-header:hover {
+    background-color: #e0e0e0;
+}
+
+.sortable-header.sorted {
+    background-color: #e6f7ff;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sort-indicator {
+    font-size: 0.8em;
+    margin-left: 5px;
+}
+
+.resizer {
+    display: inline-block;
+    width: 5px;
+    height: 100%;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transform: translateX(50%);
+    z-index: 1;
+    cursor: col-resize;
+    background-color: rgba(0, 0, 0, 0.1);
+}

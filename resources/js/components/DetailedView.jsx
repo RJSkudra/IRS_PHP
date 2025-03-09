@@ -156,8 +156,35 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                 const updatedEntries = sortedEntries.map(entry => 
                     entry.id === editableEntryId ? updatedEntry : entry
                 );
+                
+                // Update sortedEntries with the new data
                 setSortedEntries(updatedEntries);
+                
+                // Also update the original entries
                 setOriginalEntries(updatedEntries);
+                
+                // Optionally re-apply the current sort
+                if (sortBy.length) {
+                    const columnId = sortBy[0].id;
+                    const desc = sortBy[0].desc;
+                    
+                    const resortedData = [...updatedEntries].sort((a, b) => {
+                        // Same sorting logic as in the useEffect
+                        const aValue = a[columnId] == null ? '' : a[columnId];
+                        const bValue = b[columnId] == null ? '' : b[columnId];
+                        
+                        if (typeof aValue === 'string' && typeof bValue === 'string') {
+                            return desc ? bValue.localeCompare(aValue) : aValue.localeCompare(bValue);
+                        }
+                        
+                        if (aValue > bValue) return desc ? -1 : 1;
+                        if (aValue < bValue) return desc ? 1 : -1;
+                        return 0;
+                    });
+                    
+                    setSortedEntries(resortedData);
+                }
+                
                 addMessageToQueue({ text: 'Entry updated successfully', type: 'success' });
                 
                 // Reset editing state
@@ -291,7 +318,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
         {
             Header: 'Actions',
             Cell: ({ row }) => (
-                <>
+                <div className="action-buttons">
                     {editableEntryId === row.original.id ? (
                         <>
                             <button 
@@ -323,7 +350,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                             </button>
                         </>
                     )}
-                </>
+                </div>
             ),
         },
     ], [editableEntryId, cellRenderer]); // Remove sortedEntries, errors, editValues
@@ -342,8 +369,18 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
         headerGroups,
         rows,
         prepareRow,
+        state: { sortBy }
     } = useTable(
-        { columns, data, defaultColumn },
+        { 
+            columns, 
+            data, 
+            defaultColumn,
+            initialState: { sortBy: [] },
+            // Add this explicit sorting configuration
+            manualSortBy: true, // Tell react-table that we'll handle sorting manually
+            disableSortRemove: true, // Prevent removing sort when clicking a sorted column
+            autoResetSortBy: false // Prevent auto-resetting sort when data changes
+        },
         useSortBy,
         useResizeColumns,
         useFlexLayout,
@@ -359,6 +396,53 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
             });
         }
     );
+
+    // 2. Replace the useEffect for sorting with this improved version
+    useEffect(() => {
+        console.log("Sort state changed:", sortBy); // Add for debugging
+        
+        // Sort the data based on the current sort state
+        const applySorting = () => {
+            if (!sortBy || !sortBy.length) {
+                // If no sort is specified, just use the original data
+                return [...entries];
+            }
+
+            // Get the column ID and sort direction
+            const { id: columnId, desc } = sortBy[0];
+
+            // Create a new sorted copy
+            return [...entries].sort((rowA, rowB) => {
+                // Extract values for the column being sorted
+                let a = rowA[columnId];
+                let b = rowB[columnId];
+                
+                // Convert null/undefined to empty strings for comparison
+                a = a == null ? '' : a;
+                b = b == null ? '' : b;
+
+                // Handle age column as numeric
+                if (columnId === 'age') {
+                    const numA = Number(a) || 0;
+                    const numB = Number(b) || 0;
+                    return desc ? numB - numA : numA - numB;
+                }
+                
+                // Handle string comparison for other columns
+                if (typeof a === 'string' && typeof b === 'string') {
+                    return desc ? b.localeCompare(a) : a.localeCompare(b);
+                }
+                
+                // Fallback comparison for other types
+                if (a < b) return desc ? 1 : -1;
+                if (a > b) return desc ? -1 : 1;
+                return 0;
+            });
+        };
+
+        const sortedData = applySorting();
+        setSortedEntries(sortedData);
+    }, [sortBy, entries]);
 
     const saveColumnWidths = useCallback(() => {
         headerGroups.forEach(headerGroup => {
@@ -392,18 +476,26 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                                 return (
                                     <tr key={key} {...restHeaderGroupProps}>
                                         {headerGroup.headers.map(column => {
-                                            const { key, ...rest } = column.getHeaderProps();
+                                            // Add getSortByToggleProps to make headers clickable for sorting
+                                            const { key, ...rest } = column.getHeaderProps(column.getSortByToggleProps());
                                             return (
-                                                <th key={key} {...rest}>
-                                                    {column.render('Header')}
+                                                <th 
+                                                    key={key} 
+                                                    {...rest}
+                                                    className={`sortable-header ${column.isSorted ? 'sorted' : ''}`}
+                                                    title="Click to sort"
+                                                >
+                                                    <div className="header-content">
+                                                        <span>{column.render('Header')}</span>
+                                                        <span className="sort-indicator">
+                                                            {column.isSorted
+                                                                ? column.isSortedDesc
+                                                                    ? ' ▼'
+                                                                    : ' ▲'
+                                                                : ' '}
+                                                        </span>
+                                                    </div>
                                                     <div {...column.getResizerProps()} className="resizer" />
-                                                    <span>
-                                                        {column.isSorted
-                                                            ? column.isSortedDesc
-                                                                ? ' 🔽'
-                                                                : ' 🔼'
-                                                            : ''}
-                                                    </span>
                                                 </th>
                                             );
                                         })}

@@ -204,6 +204,28 @@ body.dark-mode {
             }
         }
 
+        .apply-button {
+            background-color: #17a2b8;
+            color: #ffffff;
+            transition: background-color 0.3s;
+            z-index: 1004;
+            
+            &:hover {
+                background-color: #138496;
+            }
+        }
+
+        .cancel-button {
+            background-color: #6c757d;
+            color: #ffffff;
+            transition: background-color 0.3s;
+            z-index: 1004;
+            
+            &:hover {
+                background-color: #5a6268;
+            }
+        }
+
         .detailed-view-header {
             position: sticky;
             top: 0;
@@ -273,5 +295,11 @@ body.dark-mode {
             color: #ffffff;
             border-color: #333333;
         }
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 5px;
     }
 }
