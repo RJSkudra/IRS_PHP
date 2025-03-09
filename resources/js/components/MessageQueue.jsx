@@ -1,14 +1,16 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const MessageQueue = ({ messages }) => {
+    // Use useRef to persist the displayedMessages set between renders
+    const displayedMessagesRef = useRef(new Set());
+    
     useEffect(() => {
-        const displayedMessages = new Set();
-        
+        // Only process new messages that haven't been displayed yet
         messages.forEach(message => {
-            if (!displayedMessages.has(message.id)) {
-                displayedMessages.add(message.id);
+            if (!displayedMessagesRef.current.has(message.id)) {
+                displayedMessagesRef.current.add(message.id);
                 
                 const toastOptions = {
                     position: "bottom-right",
@@ -16,7 +18,13 @@ const MessageQueue = ({ messages }) => {
                     hideProgressBar: false,
                     closeOnClick: true,
                     pauseOnHover: true,
-                    draggable: true
+                    draggable: true,
+                    // Add onClose to remove the message ID when toast is closed
+                    onClose: () => {
+                        setTimeout(() => {
+                            displayedMessagesRef.current.delete(message.id);
+                        }, 500); // Small delay to prevent race conditions
+                    }
                 };
                 
                 if (message.type === 'success') {

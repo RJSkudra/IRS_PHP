@@ -3,12 +3,6 @@ body.dark-mode {
     background-color: #121212;
     color: #e0e0e0;
     transition: background-color 0.3s, color 0.3s;
-}
-
-.dark {
-    background-color: transparent;
-    color: #e0e0e0;
-    transition: background-color 0.3s, color 0.3s;
 
     .form-container {
         background-color: transparent;
@@ -106,16 +100,22 @@ body.dark-mode {
     }
 
     .message {
+        background-color: #333;
+        border-color: #555;
+        color: #e0e0e0;
+        
         &.success {
-            background-color: #103042;
-            color: #64b5f6;
-            border-left: 4px solid #2196f3;
+            background-color: #388e3c;
+            color: #ffffff;
         }
 
         &.error {
-            background-color: #311b1b;
-            color: #ef9a9a;
-            border-left: 4px solid #e57373;
+            background-color: #d32f2f;
+            color: #ffffff;
+        }
+        
+        .close-button {
+            color: #e0e0e0;
         }
     }
 
@@ -144,7 +144,7 @@ body.dark-mode {
         display: flex;
         justify-content: center;
         align-items: center;
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.7);
         z-index: 1000;
     }
 
@@ -153,7 +153,7 @@ body.dark-mode {
         max-width: 90%;
         margin: 0 auto;
         padding: 20px;
-        background-color: rgba(30, 30, 30, 0.9); // Make the background slightly transparent
+        background-color: rgba(30, 30, 30, 0.95); // Make the background slightly transparent
         color: #e0e0e0;
         border: 1px solid #333333;
         border-radius: 8px;
@@ -207,7 +207,7 @@ body.dark-mode {
         .detailed-view-header {
             position: sticky;
             top: 0;
-            background-color: rgba(30, 30, 30, 0.9);
+            background-color: rgba(30, 30, 30, 0.95);
             z-index: 1002;
             display: flex;
             justify-content: space-between;
@@ -239,80 +239,39 @@ body.dark-mode {
             border-collapse: collapse;
         }
     }
-}
 
-// Dark mode styling
-body.dark-mode {
-    background-color: #121212;
-    color: #e0e0e0;
-    transition: background-color 0.3s, color 0.3s;
-}
+    // Additional form elements
+    input, select, textarea {
+        background-color: #2a2a2a;
+        color: #ffffff;
+        border-color: #333333;
+        
+        &::placeholder {
+            color: #aaa;
+        }
+    }
 
-body.dark-mode .message {
-    background-color: #333;
-    border-color: #555;
-    color: #e0e0e0;
-}
+    // Table styles
+    .table {
+        background-color: #1e1e1e;
+        color: #e0e0e0;
+        border: 1px solid #333333;
+        
+        th, td {
+            border: 1px solid #333333;
+        }
+    }
 
-body.dark-mode .message.success {
-    background-color: #388e3c;
-}
-
-body.dark-mode .message.error {
-    background-color: #d32f2f;
-}
-
-body.dark-mode .close-button {
-    color: #e0e0e0;
-}
-
-// Additional dark mode styles
-body.dark-mode .button {
-    background-color: #444;
-    color: #e0e0e0;
-    border: 1px solid #555;
-}
-
-body.dark-mode .button:hover {
-    background-color: #555;
-}
-
-body.dark-mode .toggle-button {
-    background-color: #444;
-    color: #e0e0e0;
-}
-
-body.dark-mode .toggle-button:hover {
-    background-color: #555;
-}
-
-body.dark-mode .table {
-    background-color: #333;
-    color: #e0e0e0;
-    border: 1px solid #555;
-}
-
-body.dark-mode .table th,
-body.dark-mode .table td {
-    border: 1px solid #555;
-}
-
-body.dark-mode .form-component {
-    background-color: #333;
-    color: #e0e0e0;
-    border: 1px solid #555;
-}
-
-body.dark-mode .form-component input,
-body.dark-mode .form-component select,
-body.dark-mode .form-component textarea {
-    background-color: #444;
-    color: #e0e0e0;
-    border: 1px solid #555;
-}
-
-body.dark-mode .form-component input::placeholder,
-body.dark-mode .form-component select::placeholder,
-body.dark-mode .form-component textarea::placeholder {
-    color: #aaa;
+    // Form components
+    .form-component {
+        background-color: #1e1e1e;
+        color: #e0e0e0;
+        border: 1px solid #333333;
+        
+        input, select, textarea {
+            background-color: #2a2a2a;
+            color: #ffffff;
+            border-color: #333333;
+        }
+    }
 }
