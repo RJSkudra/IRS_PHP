@@ -35,6 +35,9 @@ COPY . /var/www
 # Copy existing application directory permissions
 COPY --chown=www-data:www-data . /var/www
 
+# Install Composer dependencies
+RUN composer install
+
 # Install npm dependencies and build assets
 RUN npm install
 
