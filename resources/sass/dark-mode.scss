@@ -302,4 +302,13 @@ body.dark-mode {
         justify-content: center;
         gap: 5px;
     }
+
+    .primary-button {
+        background-color: #2d6da3;
+        transition: background-color 0.3s;
+
+        &:hover {
+            background-color: #3a8cd8;
+        }
+    }
 }

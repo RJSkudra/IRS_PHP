@@ -1,5 +1,5 @@
 const tableComponentMessages = {
-    title: 'Ieraksti',
+    title: 'Jaunākie ieraksti',
     buttons: {
         deleteAll: 'Dzēst visus ierakstus',
         editAll: 'Rediģēt visus ierakstus'

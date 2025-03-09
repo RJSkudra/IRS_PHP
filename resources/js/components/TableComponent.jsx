@@ -10,7 +10,7 @@ const TableComponent = ({ entries, totalEntries, handleDeleteAll, handleEditAll 
                     <button onClick={handleDeleteAll} className="button delete-button">
                         {tableComponentMessages.buttons.deleteAll}
                     </button>
-                    <button onClick={handleEditAll} className="button edit-button">
+                    <button onClick={handleEditAll} className="button primary-button">
                         {tableComponentMessages.buttons.editAll}
                     </button>
                 </div>

@@ -91,6 +91,15 @@ body {
     }
 }
 
+.primary-button {
+    background-color: #007bff;
+    color: white;
+
+    &:hover {
+        background-color: #0069d9;
+    }
+}
+
 .error {
     color: red;
     font-size: 12px;
