@@ -207,11 +207,22 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
             : value;
             
         const fieldError = editableEntryId === row.original.id && errors[fieldName] ? errors[fieldName] : null;
+        
+        // Use pattern attribute for age to only allow numbers, but keep type="text" for consistent behavior
+        const inputProps = fieldName === 'age' 
+            ? {
+                type: "text", 
+                pattern: "[0-9]*",
+                inputMode: "numeric"
+              } 
+            : { 
+                type: "text" 
+              };
             
         return (
             <div>
                 <input 
-                    type={fieldName === 'age' ? 'number' : 'text'}
+                    {...inputProps}
                     value={displayValue} 
                     onChange={(e) => handleInputChange(row.original.id, fieldName, e.target.value)}
                     onFocus={() => setFocusedField({ id: row.original.id, field: fieldName })}
