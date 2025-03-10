@@ -45,6 +45,10 @@ RUN npm ci
 # Copy all application files
 COPY . .
 
+# Generate .env file from example
+RUN cp .env.example .env && \
+    php artisan key:generate --force
+
 # Build frontend assets
 RUN npm run build
 
@@ -92,9 +96,10 @@ RUN mkdir -p /var/log/nginx /var/log/supervisor
 # Set correct permissions
 RUN chown -R www-data:www-data /var/www && \
     chown -R www-data:www-data /var/log/nginx && \
-    chown -R www-data:www-data /var/log/supervisor
+    chown -R www-data:www-data /var/log/supervisor && \
+    chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
-# Expose port 80 for HTTP
+# Expose port 80 for HTTP and 4000 for Socket.IO
 EXPOSE 80 4000
 
 # Start services with supervisor
