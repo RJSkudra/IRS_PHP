@@ -95,7 +95,7 @@ RUN chown -R www-data:www-data /var/www && \
     chown -R www-data:www-data /var/log/supervisor
 
 # Expose port 80 for HTTP
-EXPOSE 80
+EXPOSE 80 4000
 
 # Start services with supervisor
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
