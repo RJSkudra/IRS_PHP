@@ -39,7 +39,7 @@ const TableComponent = ({ entries, totalEntries, handleDeleteAll, handleEditAll 
                     ))}
                 </tbody>
             </table>
-            <p>{tableComponentMessages.totalEntries.replace('{0}', totalEntries)}</p>
+            <p style="margin-left: 5%;">{tableComponentMessages.totalEntries.replace('{0}', totalEntries)}</p>
         </>
     );
 };

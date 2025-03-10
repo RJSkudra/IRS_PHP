@@ -62,6 +62,7 @@ body {
     cursor: pointer;
     transition: background-color 0.3s, color 0.3s;
     font-weight: 500;
+    margin-right: 15%
 }
 
 .submit-button {
@@ -157,8 +158,8 @@ body {
 
 // Users table
 .users-table {
-    width: 100%;
-    margin-top: 36px;
+    width: 90%;
+    margin: 36px auto; // Center the table horizontally
     border-collapse: separate;
     border-spacing: 0;
     border-radius: 8px;
@@ -201,6 +202,7 @@ body {
 
 .table-header {
     display: flex;
+    margin-left: 5%;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
