@@ -8,7 +8,7 @@ import path from 'path';
 // Create Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
-
+const isProduction = process.env.NODE_ENV === 'production';
 // Get environment variables or use defaults
 const HOST_DOMAIN = process.env.APP_URL || 
                    process.env.SOCKET_URL || 
@@ -24,12 +24,14 @@ console.log(`Starting server with HOST_DOMAIN: ${HOST_DOMAIN} (${isSecureConnect
 // Create Socket.IO server with comprehensive CORS configuration
 const io = new Server(server, {
     cors: {
-        origin: '*', // In production, set to specific domains
+        origin: isProduction 
+            ? [process.env.APP_URL].filter(Boolean) 
+            : ['http://localhost:8000', 'http://127.0.0.1:8000', 'http://localhost:4000'],
         methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
         allowedHeaders: ["Content-Type", "X-CSRF-TOKEN"],
         credentials: true
     },
-    path: '/socket.io',
+    path: '/socket.io', // CHANGED from '/socket-api' to '/socket.io'
     pingTimeout: 60000,
     pingInterval: 25000,
     transports: ['polling', 'websocket'], // Try polling first for better compatibility
@@ -42,12 +44,22 @@ const io = new Server(server, {
     }
 });
 
+// Make sure the API_PREFIX is determined correctly:
+
+// Different API path for development vs production
+
+const API_PREFIX = isProduction ? '/api' : '/socket.io'; // CHANGED from '/socket-api'
+
+console.log(`Using API prefix: ${API_PREFIX} based on environment: ${process.env.NODE_ENV || 'development'}`);
+
 // Apply middleware
 app.use(express.json());
 
 // Configure CORS with specific headers needed for WebSocket
 app.use(cors({
-    origin: '*', // Allow all origins in development
+    origin: isProduction 
+        ? [process.env.APP_URL].filter(Boolean) 
+        : ['http://localhost:8000', 'http://127.0.0.1:8000', 'http://localhost:4000'],
     methods: ["GET", "POST", "DELETE", "PUT"],
     allowedHeaders: ["Content-Type", "X-CSRF-TOKEN"],
     exposedHeaders: ["Access-Control-Allow-Origin"],
@@ -90,10 +102,25 @@ app.use((req, res, next) => {
 // In-memory storage for entries
 let entries = [];
 
-// API Routes
-app.post('/api/update-entries', (req, res) => {
+// API Routes - Use the dynamic API_PREFIX
+app.post(`${API_PREFIX}/update-entries`, (req, res) => {
     try {
         console.log('Received update request:', req.body);
+        
+        // Log headers to debug CSRF issues
+        console.log('Request headers:', req.headers);
+        
+        // Check for CSRF token in header (for Laravel CSRF)
+        const csrfHeader = req.headers['x-csrf-token'];
+        
+        if (!csrfHeader) {
+            console.warn('Missing CSRF token in request');
+            // Continue anyway since we're handling this in the Node server
+            // (Laravel CSRF protection isn't needed here)
+        } else {
+            console.log('CSRF token present:', csrfHeader);
+        }
+        
         if (!req.body.entries || !Array.isArray(req.body.entries)) {
             return res.status(400).send({ error: 'Invalid entries data' });
         }
@@ -106,7 +133,8 @@ app.post('/api/update-entries', (req, res) => {
     }
 });
 
-app.delete('/api/delete/:id', (req, res) => {
+// Update other API routes to use the dynamic prefix
+app.delete(`${API_PREFIX}/delete/:id`, (req, res) => {
     try {
         const id = req.params.id;
         console.log('Deleting entry with ID:', id);
@@ -126,7 +154,7 @@ app.delete('/api/delete/:id', (req, res) => {
 });
 
 // Get all entries
-app.get('/api/entries', (req, res) => {
+app.get(`${API_PREFIX}/entries`, (req, res) => {
     res.status(200).send(entries);
 });
 
@@ -143,7 +171,7 @@ app.get('/health', (req, res) => {
 });
 
 // Status endpoint
-app.get('/api/status', (req, res) => {
+app.get(`${API_PREFIX}/status`, (req, res) => {
     res.status(200).send({ 
         status: 'Server is running', 
         entries: entries.length,
@@ -164,6 +192,67 @@ app.get('/socket-diagnostic', (req, res) => {
         requestHeaders: req.headers
     });
 });
+
+// Ensure we handle both API prefixes correctly
+if (!isProduction) {
+    // In development, also handle the socket-api prefix explicitly
+    app.post('/socket-api/update-entries', (req, res) => {
+        try {
+            console.log('Received update request on socket-api path:', req.body);
+            
+            // Check for CSRF token in header
+            const csrfHeader = req.headers['x-csrf-token'];
+            
+            if (!csrfHeader) {
+                console.warn('Missing CSRF token in request');
+            } else {
+                console.log('CSRF token present:', csrfHeader);
+            }
+            
+            if (!req.body.entries || !Array.isArray(req.body.entries)) {
+                return res.status(400).send({ error: 'Invalid entries data' });
+            }
+            
+            entries = req.body.entries;
+            io.emit('entriesUpdated', entries);
+            res.status(200).send({ message: 'Entries updated successfully' });
+        } catch (error) {
+            console.error('Error updating entries:', error);
+            res.status(500).send({ error: 'Failed to update entries' });
+        }
+    });
+    
+    // Also handle other endpoints with the socket-api prefix
+    app.get('/socket-api/entries', (req, res) => {
+        res.status(200).send(entries);
+    });
+    
+    app.delete('/socket-api/delete/:id', (req, res) => {
+        try {
+            const id = req.params.id;
+            console.log('Deleting entry with ID:', id);
+            const initialLength = entries.length;
+            entries = entries.filter(entry => entry.id !== id);
+            
+            if (entries.length === initialLength) {
+                return res.status(404).send({ error: 'Entry not found' });
+            }
+            
+            io.emit('entriesUpdated', entries);
+            res.status(200).send({ message: 'Entry deleted successfully' });
+        } catch (error) {
+            console.error('Error deleting entry:', error);
+            res.status(500).send({ error: 'Failed to delete entry' });
+        }
+    });
+
+    // Redirect from /socket-api to /socket.io
+    app.use('/socket-api', (req, res, next) => {
+        console.log(`Redirecting legacy request from /socket-api to /socket.io`);
+        req.url = '/socket.io' + req.url.substring('/socket-api'.length);
+        next();
+    });
+}
 
 // Socket.IO connection handler with comprehensive logging
 io.on('connection', (socket) => {

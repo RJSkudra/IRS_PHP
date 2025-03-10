@@ -71,12 +71,76 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
         }
 
         try {
-            const response = await axios.post('/api/update-entries', { entries: sortedEntries });
-            if (response.status === 200) {
+            // Get the CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            
+            // Improved API URL construction
+            const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            
+            let apiUrl;
+            let apiResponse = null;
+            
+            if (isLocalDev) {
+                // First check if Node.js server is available
+                const nodeServerUrl = `http://${window.location.hostname}:4000/api/update-entries`;
+                const nodeServerAvailable = await checkServerStatus(`http://${window.location.hostname}:4000`);
+                
+                if (nodeServerAvailable) {
+                    try {
+                        apiResponse = await axios.post(nodeServerUrl, 
+                            { entries: sortedEntries },
+                            {
+                                headers: {
+                                    'X-CSRF-TOKEN': csrfToken,
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json'
+                                },
+                                withCredentials: true
+                            }
+                        );
+                        apiUrl = nodeServerUrl;
+                    } catch (nodeError) {
+                        console.warn(`Node.js server request failed despite server being available: ${nodeError.message}`);
+                        throw nodeError;
+                    }
+                } else {
+                    // Fall back to Laravel server
+                    apiUrl = `${window.location.origin}/api/update-entries`;
+                    apiResponse = await axios.post(apiUrl, 
+                        { entries: sortedEntries },
+                        {
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            withCredentials: true
+                        }
+                    );
+                }
+            } else {
+                // In production, just use the origin
+                apiUrl = `${window.location.origin}/api/update-entries`;
+                
+                apiResponse = await axios.post(apiUrl, 
+                    { entries: sortedEntries },
+                    {
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        withCredentials: true
+                    }
+                );
+            }
+            
+            // Rest of your success handling code...
+            if (apiResponse.status === 200) {
                 setOriginalEntries(sortedEntries);
                 addMessageToQueue({ text: detailedViewMessages.messages.entriesUpdateSuccess, type: 'success' });
             } else {
-                console.error('Unexpected response:', response);
+                console.error('Unexpected response:', apiResponse);
                 addMessageToQueue({ text: detailedViewMessages.messages.unexpectedResponse, type: 'error' });
             }
         } catch (error) {
@@ -97,7 +161,33 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
 
     const handleDelete = async (id) => {
         try {
-            await axios.delete(`/delete/${id}`);
+            // Use consistent API endpoint based on environment
+            const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            
+            // Get the socket URL from environment variable or construct it
+            const socketPort = 4000; // This should match your Node.js server port
+            const apiBaseUrl = isLocalDev ? `http://${window.location.hostname}:${socketPort}` : window.location.origin;
+            
+            // Use /socket.io/ in development and /api/ in production
+            const apiPrefix = isLocalDev ? '/socket.io' : '/api'; // Changed from '/socket-api'
+            const apiPath = `${apiBaseUrl}${apiPrefix}/delete/${id}`;
+            
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            
+            await axios.delete(apiPath, {
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                withCredentials: true
+            });
+            
+            // Update the local state after successful deletion
+            const updatedEntries = sortedEntries.filter(entry => entry.id !== id);
+            setSortedEntries(updatedEntries);
+            setOriginalEntries(updatedEntries);
+            
             addMessageToQueue({ text: detailedViewMessages.messages.entryDeleteSuccess, type: 'success' });
         } catch (error) {
             console.error('Error deleting entry:', error);
@@ -149,12 +239,89 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
         }
         
         try {
-            const response = await axios.post('/api/update-entries', { 
-                entries: [updatedEntry] // Only send the changed entry
-            });
+            // Get the CSRF token from the meta tag
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             
-            if (response.status === 200) {
+            // Improved API URL construction
+            const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            
+            // For local development, try both the Node server and the Laravel server
+            let apiUrl;
+            let apiResponse = null;
+            let apiError = null;
+            
+            if (isLocalDev) {
+                // First try the Node.js server with correct path prefix
+                const socketPort = 4000; // This should match your Node.js server port
+                const apiBaseUrl = `http://${window.location.hostname}:${socketPort}`;
+                const apiPrefix = '/socket-api'; // Use socket-api for Node.js server
+                const nodeServerUrl = `${apiBaseUrl}${apiPrefix}/update-entries`;
+                
+                console.log(`Attempting to connect to Node.js server at: ${nodeServerUrl}`);
+                
+                try {
+                    apiResponse = await axios.post(nodeServerUrl, 
+                        { entries: [updatedEntry] },
+                        {
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            withCredentials: true,
+                            timeout: 5000 // Add timeout to fail faster if server is unreachable
+                        }
+                    );
+                    apiUrl = nodeServerUrl;
+                } catch (nodeError) {
+                    console.warn(`Node.js server connection failed: ${nodeError.message}`);
+                    apiError = nodeError;
+                    
+                    // If Node server fails, try the Laravel server
+                    const laravelServerUrl = `${window.location.origin}/api/update-entries`;
+                    console.log(`Attempting to connect to Laravel server at: ${laravelServerUrl}`);
+                    
+                    try {
+                        apiResponse = await axios.post(laravelServerUrl, 
+                            { entries: [updatedEntry] },
+                            {
+                                headers: {
+                                    'X-CSRF-TOKEN': csrfToken,
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json'
+                                },
+                                withCredentials: true
+                            }
+                        );
+                        apiUrl = laravelServerUrl;
+                    } catch (laravelError) {
+                        console.error(`Laravel server connection also failed: ${laravelError.message}`);
+                        throw apiError; // Throw the original error since both failed
+                    }
+                }
+            } else {
+                // In production, just use the origin
+                apiUrl = `${window.location.origin}/api/update-entries`;
+                
+                apiResponse = await axios.post(apiUrl, 
+                    { entries: [updatedEntry] },
+                    {
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        withCredentials: true
+                    }
+                );
+            }
+            
+            // If we got here, we have a successful response
+            console.log(`Successfully connected to: ${apiUrl}`);
+            
+            if (apiResponse.status === 200) {
                 // Update local state after successful save
+                // Replace just the updated entry while keeping all other entries
                 const updatedEntries = sortedEntries.map(entry => 
                     entry.id === editableEntryId ? updatedEntry : entry
                 );
@@ -165,20 +332,30 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                 // Also update the original entries
                 setOriginalEntries(updatedEntries);
                 
-                // Optionally re-apply the current sort
-                if (sortBy.length) {
+                // Re-apply the current sort if needed
+                if (sortBy && sortBy.length) {
                     const columnId = sortBy[0].id;
                     const desc = sortBy[0].desc;
                     
+                    // Create a new sorted copy of all entries
                     const resortedData = [...updatedEntries].sort((a, b) => {
+                        // Handle age column as numeric
+                        if (columnId === 'age') {
+                            const numA = Number(a[columnId]) || 0;
+                            const numB = Number(b[columnId]) || 0;
+                            return desc ? numB - numA : numA - numB;
+                        }
+                        
                         // Same sorting logic as in the useEffect
                         const aValue = a[columnId] == null ? '' : a[columnId];
                         const bValue = b[columnId] == null ? '' : b[columnId];
                         
+                        // Handle string comparison for other columns
                         if (typeof aValue === 'string' && typeof bValue === 'string') {
                             return desc ? bValue.localeCompare(aValue) : aValue.localeCompare(bValue);
                         }
                         
+                        // Fallback comparison for other types
                         if (aValue > bValue) return desc ? -1 : 1;
                         if (aValue < bValue) return desc ? 1 : -1;
                         return 0;
@@ -200,7 +377,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                 setIsEditingLocal(false);
                 setErrors({});
             } else {
-                console.error('Unexpected response:', response);
+                console.error('Unexpected response:', apiResponse);
                 addMessageToQueue({ text: detailedViewMessages.messages.unexpectedResponse, type: 'error' });
             }
         } catch (error) {

@@ -20,11 +20,11 @@ const SOCKET_URL = window.location.hostname === 'localhost' ?
                   `http://${window.location.hostname}:4000` : 
                   HOST_DOMAIN;
 
-console.log('Connecting to Socket.IO server:', SOCKET_URL, 'with path:', '/socket.io');
+console.log('Connecting to Socket.IO server:', SOCKET_URL, 'with path:', '/socket-api');
 
 // Configure socket with the same options as the working socket-test page
 const socket = io(SOCKET_URL, {
-    path: '/socket.io',
+    path: '/socket.io',  // CHANGE THIS LINE - remove '/socket-api'
     transports: ['polling', 'websocket'], // Try polling first like in server.js
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
@@ -268,6 +268,73 @@ const UserForm = () => {
         }
     };
 
+    const handleEditEntry = async (id, updatedData) => {
+        try {
+            // Use window.location.origin for consistent URLs
+            const baseUrl = window.location.origin;
+            
+            // Get the CSRF token from the meta tag
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            
+            if (!csrfToken) {
+                throw new Error('CSRF token not found. Make sure you have <meta name="csrf-token" content="{{ csrf_token() }}"> in your HTML.');
+            }
+    
+            console.log('Updating entry:', id, 'with data:', updatedData);
+            
+            const response = await axios.post(`${baseUrl}/api/update-entries`, 
+                { id, ...updatedData }, 
+                {
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    withCredentials: true
+                }
+            );
+            
+            console.log('Update response:', response.data);
+            
+            // Refresh entries after updating
+            fetchEntries();
+            
+            // Show success message
+            addMessageToQueue({ 
+                text: validationMessages.success?.entry_updated || 'Entry updated successfully', 
+                type: 'success' 
+            });
+            
+            return true;
+        } catch (error) {
+            console.error('Error updating entry:', error);
+            
+            // Better error reporting
+            if (error.response) {
+                console.error('Response error:', error.response.status, error.response.data);
+                
+                if (error.response.status === 419) {
+                    addMessageToQueue({ 
+                        text: 'CSRF token mismatch. Please refresh the page and try again.', 
+                        type: 'error' 
+                    });
+                } else {
+                    addMessageToQueue({ 
+                        text: error.response.data.message || validationMessages.error?.update || 'Error updating entry', 
+                        type: 'error' 
+                    });
+                }
+            } else {
+                addMessageToQueue({ 
+                    text: error.message || validationMessages.error?.update || 'Error updating entry', 
+                    type: 'error' 
+                });
+            }
+            
+            return false;
+        }
+    };
+
     const addMessageToQueue = (message) => {
         const messageWithId = {
             ...message,
@@ -289,7 +356,12 @@ const UserForm = () => {
     return (
         <div className={`user-form ${darkMode ? 'dark-mode' : ''}`}>
             {showDetailedView && (
-                <DetailedView onClose={() => setShowDetailedView(false)} entries={entries} setIsEditing={setIsEditing} />
+                <DetailedView 
+                    onClose={() => setShowDetailedView(false)} 
+                    entries={entries} 
+                    setIsEditing={setIsEditing}
+                    onUpdateEntry={handleEditEntry}
+                />
             )}
             <MessageQueue messages={messageQueue} removeMessage={removeMessage} />
             <button onClick={toggleDarkMode} className="button toggle-button" style={{ zIndex: 1005 }}>
