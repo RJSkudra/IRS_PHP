@@ -32,28 +32,18 @@ RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath && \
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy composer files
-COPY composer.json composer.lock ./ 
-
-# Install dependencies
-RUN composer install --no-scripts --no-autoloader --no-dev
-
-# Copy package files and install dependencies
-COPY package.json package-lock.json ./
-RUN npm ci
-
 # Copy all application files
 COPY . .
 
-# Generate .env file from example
+# Install composer dependencies
+RUN composer install --no-interaction --optimize-autoloader --no-dev
+
+# Install npm dependencies and build assets
+RUN npm ci && npm run build
+
+# Generate .env file from example and key
 RUN cp .env.example .env && \
     php artisan key:generate --force
-
-# Build frontend assets
-RUN npm run build
-
-# Generate optimized autoload files
-RUN composer dump-autoload --optimize
 
 # Configure PHP-FPM for production
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
