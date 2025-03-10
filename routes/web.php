@@ -46,3 +46,7 @@ Route::get('/validation-messages', function () {
         ]
     ]);
 });
+
+Route::get('/socket-test', function () {
+    return view('socket-test');
+});

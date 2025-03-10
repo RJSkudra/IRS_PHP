@@ -9,9 +9,50 @@ import validationMessages from '../../lang/lv/validationMessages';
 import MessageQueue from './MessageQueue';
 import { validateField, validateForm, areAllFieldsFilled } from '../utils/Validation';
 
-// Use environment variables for the Socket.io connection
-const SOCKET_URL = import.meta.env.SOCKET_SERVER_URL || 'http://localhost:4000';
-const socket = io(SOCKET_URL);
+// Get the socket URL from environment variables
+const SOCKET_URL = import.meta.env.VITE_SOCKET_SERVER_URL || 'http://localhost:8000';
+const SOCKET_PATH = import.meta.env.VITE_SOCKET_PATH || '/socket.io';
+
+console.log('Connecting to Socket.IO server:', SOCKET_URL, 'with path:', SOCKET_PATH);
+
+// Configure socket with explicit path and better error handling
+const socket = io(SOCKET_URL, {
+    path: SOCKET_PATH,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+    timeout: 20000,
+    transports: ['websocket', 'polling'],
+    withCredentials: true
+});
+
+// Add extensive logging for debugging
+socket.io.on("error", (error) => {
+    console.error("Socket.IO connection error:", error);
+});
+
+socket.io.on("reconnect_attempt", (attempt) => {
+    console.log(`Socket.IO reconnection attempt #${attempt}`);
+});
+
+socket.io.on("reconnect_error", (error) => {
+    console.error("Socket.IO reconnection error:", error);
+});
+
+socket.io.on("reconnect_failed", () => {
+    console.error("Socket.IO reconnection failed");
+});
+
+socket.on('connect', () => {
+    console.log('Connected to WebSocket server with ID:', socket.id);
+    console.log('Transport type:', socket.io.engine.transport.name);
+    
+    // Send a handshake to test the connection
+    socket.emit('handshake', { client: 'web', time: new Date().toISOString() });
+});
+
+socket.on('disconnect', (reason) => {
+    console.log('Disconnected from WebSocket server:', reason);
+});
 
 const UserForm = () => {
     const [formData, setFormData] = useState({
@@ -91,7 +132,13 @@ const UserForm = () => {
             // Removed duplicate fetchEntries function
     const fetchEntries = async () => {
         try {
-            const response = await axios.get('/api/entries');
+            // Use the window.location.origin for API endpoints
+            const baseUrl = window.location.origin;
+            console.log('Fetching entries from:', `${baseUrl}/api/entries`);
+            
+            const response = await axios.get(`${baseUrl}/api/entries`);
+            console.log('Entries response:', response.data);
+            
             setEntries(response.data);
             setTotalEntries(response.data.length);
             if (response.data.length > 0) {
@@ -99,6 +146,14 @@ const UserForm = () => {
             }
         } catch (error) {
             console.error('Error fetching entries:', error);
+            // Add better error reporting
+            if (error.response) {
+                console.error('Response error:', error.response.status, error.response.data);
+            } else if (error.request) {
+                console.error('No response received:', error.request);
+            } else {
+                console.error('Error setting up request:', error.message);
+            }
         }
     };
 
@@ -141,6 +196,7 @@ const UserForm = () => {
         setIsFormValid(isValid);
     };
 
+    // Update handleSubmit function
     const handleSubmit = async (e) => {
         e.preventDefault();
         const newErrors = {};
@@ -151,33 +207,33 @@ const UserForm = () => {
             }
         });
         setErrors(newErrors);
+        
         if (Object.keys(newErrors).length === 0) {
             try {
-                // Use environment variables for the API URL
-                const API_URL = import.meta.env.VITE_APP_URL || 'http://localhost:8000';
-                const response = await axios.post(`${API_URL}/store`, formData);
+                // Use window.location.origin for consistent URLs
+                const baseUrl = window.location.origin;
                 
-                console.log('Form submitted successfully', response.data);
-                addMessageToQueue({ text: validationMessages.success.created, type: 'success' });
+                // Add loading indicator
+                addMessageToQueue({ text: 'Submitting form...', type: 'info' });
                 
-                // Reset form after successful submission
-                setFormData({
-                    name: '',
-                    surname: '',
-                    age: '',
-                    phone: '',
-                    address: ''
+                // Log the request being made
+                console.log('Submitting form to:', `${baseUrl}/store`);
+                
+                const response = await axios.post(`${baseUrl}/store`, formData, {
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    withCredentials: true
                 });
-                setTouched({});
                 
-                fetchEntries();
+                console.log('Form submission response:', response);
+                // Rest of success handling...
+                
             } catch (error) {
                 console.error('Error submitting form:', error);
-                if (error.response && error.response.data && error.response.data.message) {
-                    addMessageToQueue({ text: error.response.data.message, type: 'error' });
-                } else {
-                    addMessageToQueue({ text: 'Error submitting form', type: 'error' });
-                }
+                // Better error reporting...
             }
         }
     };
