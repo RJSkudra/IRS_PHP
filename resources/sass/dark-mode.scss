@@ -4,6 +4,16 @@ body.dark-mode {
     color: #e0e0e0;
     transition: background-color 0.3s, color 0.3s;
 
+    .main-title {
+        text-align: center;
+        margin: 0 auto 24px;
+        color: #e0e0e0;
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        transition: color 0.3s;
+    }
+
     .form-container {
         background-color: transparent;
         border: none;

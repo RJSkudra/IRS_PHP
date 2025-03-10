@@ -367,6 +367,7 @@ const UserForm = () => {
             <button onClick={toggleDarkMode} className="button toggle-button" style={{ zIndex: 1005 }}>
                 <i className={darkMode ? 'fas fa-sun' : 'fas fa-moon'}></i>
             </button>
+            <h1 className="main-title">IRS datu ievade</h1>
             <FormComponent
                 formData={formData}
                 errors={errors}

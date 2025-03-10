@@ -29,6 +29,17 @@ body {
     transition: color 0.3s;
 }
 
+// Main title
+.main-title {
+    text-align: center;
+    margin: 0 auto 24px;
+    color: #222;
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    transition: color 0.3s;
+}
+
 // Form grid
 .form-grid {
     display: grid;
