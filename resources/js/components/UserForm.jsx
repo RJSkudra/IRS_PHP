@@ -9,23 +9,29 @@ import validationMessages from '../../lang/lv/validationMessages';
 import MessageQueue from './MessageQueue';
 import { validateField, validateForm, areAllFieldsFilled } from '../utils/Validation';
 
-// Get the socket URL from environment variables
-const HOST_DOMAIN = process.env.APP_URL || 
-                   process.env.SOCKET_URL || 
-                   'http://localhost:4000';
-const SOCKET_URL = HOST_DOMAIN;
-const SOCKET_PATH = import.meta.env.VITE_SOCKET_PATH || '/socket.io';
+// Use the same socket URL approach as the socket-test page
+const isSecure = window.location.protocol === 'https:';
+const HOST_DOMAIN = isSecure ? 
+                   `https://${window.location.hostname}` : 
+                   `http://${window.location.hostname}`;
+                   
+// For development, you might need to specify the port
+const SOCKET_URL = window.location.hostname === 'localhost' ? 
+                  `http://${window.location.hostname}:4000` : 
+                  HOST_DOMAIN;
 
-console.log('Connecting to Socket.IO server:', SOCKET_URL, 'with path:', SOCKET_PATH);
+console.log('Connecting to Socket.IO server:', SOCKET_URL, 'with path:', '/socket.io');
 
-// Configure socket with explicit path and better error handling
+// Configure socket with the same options as the working socket-test page
 const socket = io(SOCKET_URL, {
-    path: SOCKET_PATH,
+    path: '/socket.io',
+    transports: ['polling', 'websocket'], // Try polling first like in server.js
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     timeout: 20000,
-    transports: ['websocket', 'polling'],
-    withCredentials: true
+    forceNew: true,
+    secure: isSecure,
+    rejectUnauthorized: false // For development only
 });
 
 // Add extensive logging for debugging
