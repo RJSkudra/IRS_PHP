@@ -242,6 +242,11 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
             // Get the CSRF token from the meta tag
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             
+            // Create updated entries array with the modified entry
+            const updatedEntries = sortedEntries.map(entry => 
+                entry.id === editableEntryId ? updatedEntry : entry
+            );
+            
             // Improved API URL construction
             const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
             
@@ -261,7 +266,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                 
                 try {
                     apiResponse = await axios.post(nodeServerUrl, 
-                        { entries: [updatedEntry] },
+                        { entries: updatedEntries }, // Send ALL entries with the updated one
                         {
                             headers: {
                                 'X-CSRF-TOKEN': csrfToken,
@@ -283,7 +288,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                     
                     try {
                         apiResponse = await axios.post(laravelServerUrl, 
-                            { entries: [updatedEntry] },
+                            { entries: updatedEntries }, // Send ALL entries with the updated one
                             {
                                 headers: {
                                     'X-CSRF-TOKEN': csrfToken,
@@ -304,7 +309,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
                 apiUrl = `${window.location.origin}/api/update-entries`;
                 
                 apiResponse = await axios.post(apiUrl, 
-                    { entries: [updatedEntry] },
+                    { entries: updatedEntries }, // Send ALL entries with the updated one
                     {
                         headers: {
                             'X-CSRF-TOKEN': csrfToken,
@@ -321,15 +326,7 @@ const DetailedView = ({ onClose, entries, setIsEditing }) => {
             
             if (apiResponse.status === 200) {
                 // Update local state after successful save
-                // Replace just the updated entry while keeping all other entries
-                const updatedEntries = sortedEntries.map(entry => 
-                    entry.id === editableEntryId ? updatedEntry : entry
-                );
-                
-                // Update sortedEntries with the new data
                 setSortedEntries(updatedEntries);
-                
-                // Also update the original entries
                 setOriginalEntries(updatedEntries);
                 
                 // Re-apply the current sort if needed
