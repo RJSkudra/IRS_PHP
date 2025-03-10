@@ -55,10 +55,10 @@ RUN chown -R www-data:www-data /var/www
 USER www-data
 
 # Expose ports
-EXPOSE 9000 5173 4000
+EXPOSE 8000 5173 4000
 
 # Add environment variable for configuration
-ENV APP_PORT=9000 \
+ENV APP_PORT=8000 \
     NODE_SERVER_PORT=4000 \
     VITE_PORT=5173 \
     HOST=0.0.0.0
