@@ -10,7 +10,10 @@ import MessageQueue from './MessageQueue';
 import { validateField, validateForm, areAllFieldsFilled } from '../utils/Validation';
 
 // Get the socket URL from environment variables
-const SOCKET_URL = import.meta.env.VITE_SOCKET_SERVER_URL || 'http://localhost:4000';
+const HOST_DOMAIN = process.env.APP_URL || 
+                   process.env.SOCKET_URL || 
+                   'http://localhost:4000';
+const SOCKET_URL = HOST_DOMAIN;
 const SOCKET_PATH = import.meta.env.VITE_SOCKET_PATH || '/socket.io';
 
 console.log('Connecting to Socket.IO server:', SOCKET_URL, 'with path:', SOCKET_PATH);
