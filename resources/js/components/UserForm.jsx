@@ -222,8 +222,8 @@ const UserForm = () => {
                 // Use window.location.origin for consistent URLs
                 const baseUrl = window.location.origin;
                 
-                // Add loading indicator
-                addMessageToQueue({ text: 'Submitting form...', type: 'info' });
+                // Replace the hardcoded English text with the Latvian translation
+                addMessageToQueue({ text: validationMessages.info.submittingForm, type: 'info' });
                 
                 // Log the request being made
                 console.log('Submitting form to:', `${baseUrl}/store`);

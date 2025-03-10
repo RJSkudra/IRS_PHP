@@ -27,6 +27,9 @@ const validationMessages = {
         created: 'Ieraksts veiksmīgi pievienots',
         deleted: 'Ieraksts veiksmīgi dzēsts',
         all_deleted: 'Visi ieraksti veiksmīgi dzēsti'
+    },
+    info: {
+        submittingForm: 'Nosūta ierakstu...'
     }
 };
 
