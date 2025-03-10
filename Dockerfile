@@ -1,4 +1,5 @@
-FROM php:8.2-fpm
+# Use multi-stage build for production
+FROM php:8.2-fpm AS php-base
 
 # Set working directory
 WORKDIR /var/www
@@ -30,38 +31,59 @@ RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy composer.json and composer.lock first to leverage Docker cache
-COPY composer.json composer.lock ./
+# Copy composer files
+COPY composer.json composer.lock ./ 
 
-# Install Composer dependencies
+# Install dependencies
 RUN composer install --no-scripts --no-autoloader
 
-# Copy package.json and package-lock.json
+# Copy package files and install dependencies
 COPY package.json package-lock.json ./
-
-# Install npm dependencies
 RUN npm ci
 
-# Copy existing application directory contents
+# Copy all application files
 COPY . .
 
-# Generate optimized Composer autoload files
+# Build frontend assets
+RUN npm run build
+
+# Generate optimized autoload files
 RUN composer dump-autoload --optimize
 
-# Set correct permissions for the working directory
+# Configure PHP-FPM for production
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+
+# Set correct permissions
 RUN chown -R www-data:www-data /var/www
 
-# Change current user to www-data
-USER www-data
+# Final image with Nginx and Supervisor
+FROM php:8.2-fpm
+
+WORKDIR /var/www
+
+# Install Nginx and Supervisor
+RUN apt-get update && apt-get install -y \
+    nginx \
+    supervisor \
+    nodejs npm && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions again for the final image
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+
+# Copy built app from previous stage
+COPY --from=php-base /var/www /var/www
+COPY --from=php-base /usr/local/etc/php/php.ini /usr/local/etc/php/php.ini
+
+# Copy Nginx and Supervisor configurations
+COPY docker/nginx/nginx.conf /etc/nginx/sites-available/default
+COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Set correct permissions
+RUN chown -R www-data:www-data /var/www
 
 # Expose ports
-EXPOSE 8000 5173 4000
+EXPOSE 80
 
-# Add environment variable for configuration
-ENV APP_PORT=8000 \
-    NODE_SERVER_PORT=4000 \
-    VITE_PORT=5173 \
-    HOST=0.0.0.0
-
-# Start services
-CMD ["sh", "-c", "node resources/js/server.js & npm run dev & php artisan serve --host=0.0.0.0 --port=$APP_PORT"]
+# Start services with supervisor
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
