@@ -9,8 +9,8 @@ import validationMessages from '../../lang/lv/validationMessages';
 import MessageQueue from './MessageQueue';
 import { validateField, validateForm, areAllFieldsFilled } from '../utils/Validation';
 
-// Get the socket URL from environment variables with more reliable fallback
-const SOCKET_URL = import.meta.env.VITE_SOCKET_SERVER_URL || window.location.protocol + '//' + window.location.hostname + ':4000';
+// Get the socket URL from environment variables
+const SOCKET_URL = import.meta.env.VITE_SOCKET_SERVER_URL || 'http://localhost:4000';
 const SOCKET_PATH = import.meta.env.VITE_SOCKET_PATH || '/socket.io';
 
 console.log('Connecting to Socket.IO server:', SOCKET_URL, 'with path:', SOCKET_PATH);
@@ -21,7 +21,7 @@ const socket = io(SOCKET_URL, {
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     timeout: 20000,
-    transports: ['polling', 'websocket'], // Start with polling for better compatibility
+    transports: ['websocket', 'polling'],
     withCredentials: true
 });
 
