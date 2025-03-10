@@ -238,11 +238,32 @@ const UserForm = () => {
                 });
                 
                 console.log('Form submission response:', response);
-                // Rest of success handling...
+                
+                // Clear form fields after successful submission
+                setFormData({
+                    name: '',
+                    surname: '',
+                    age: '',
+                    phone: '',
+                    address: ''
+                });
+                
+                // Reset touched state
+                setTouched({});
+                
+                // Display success message if needed
+                if (response.data && response.data.message) {
+                    addMessageToQueue({ text: response.data.message, type: 'success' });
+                }
                 
             } catch (error) {
                 console.error('Error submitting form:', error);
                 // Better error reporting...
+                if (error.response && error.response.data && error.response.data.message) {
+                    addMessageToQueue({ text: error.response.data.message, type: 'error' });
+                } else {
+                    addMessageToQueue({ text: validationMessages.error.submission || 'Error submitting form', type: 'error' });
+                }
             }
         }
     };
