@@ -17,9 +17,16 @@ export default defineConfig({
             methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
             allowedHeaders: ['Content-Type', 'Authorization'],
         },
+        proxy: {
+            '/socket.io': {
+                target: 'http://localhost:4000',
+                ws: true,
+                changeOrigin: true
+            }
+        },
         mimeTypes: {
             'application/javascript': ['js', 'jsx'],
-            'text/jsx': ['jsx'], // Add this line
+            'text/jsx': ['jsx'],
         },
     },
 });
