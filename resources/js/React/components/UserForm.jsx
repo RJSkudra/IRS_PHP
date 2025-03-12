@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
-import '../../sass/app.scss'; // Ensure the SCSS file is imported
+import '../../../sass/app.scss'; // Ensure the SCSS file is imported
 import FormComponent from './FormComponent';
 import TableComponent from './TableComponent';
 import DetailedView from './DetailedView';
-import validationMessages from '../../lang/lv/validationMessages';
+import validationMessages from '../../../lang/lv/validationMessages';
 import MessageQueue from './MessageQueue';
-import { validateField, validateForm, areAllFieldsFilled } from '../utils/Validation';
+import { validateField, validateForm, areAllFieldsFilled } from '../../utils/Validation';
 
 // Use the same socket URL approach as the socket-test page
 const isSecure = window.location.protocol === 'https:';

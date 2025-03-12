@@ -28,7 +28,7 @@ const io = new Server(server, {
             ? [process.env.APP_URL].filter(Boolean) 
             : ['http://localhost:8000', 'http://127.0.0.1:8000', 'http://localhost:4000'],
         methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "X-CSRF-TOKEN"],
+        allowedHeaders: ["Content-Type", "X-CSRF-TOKEN", "X-Requested-With"],
         credentials: true
     },
     path: '/socket.io', // CHANGED from '/socket-api' to '/socket.io'
@@ -60,8 +60,8 @@ app.use(cors({
     origin: isProduction 
         ? [process.env.APP_URL].filter(Boolean) 
         : ['http://localhost:8000', 'http://127.0.0.1:8000', 'http://localhost:4000'],
-    methods: ["GET", "POST", "DELETE", "PUT"],
-    allowedHeaders: ["Content-Type", "X-CSRF-TOKEN"],
+    methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "X-CSRF-TOKEN", "X-Requested-With"],
     exposedHeaders: ["Access-Control-Allow-Origin"],
     credentials: true
 }));

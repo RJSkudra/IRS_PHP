@@ -1,5 +1,5 @@
 import React from 'react';
-import tableComponentMessages from '../../lang/lv/tableComponentMessages';
+import tableComponentMessages from '../../../lang/lv/tableComponentMessages';
 
 const TableComponent = ({ entries, totalEntries, handleDeleteAll, handleEditAll }) => {
     return (

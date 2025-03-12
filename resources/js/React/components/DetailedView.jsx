@@ -3,8 +3,8 @@ import axios from 'axios';
 import { useTable, useSortBy, useResizeColumns, useFlexLayout } from 'react-table';
 import 'react-resizable/css/styles.css';
 import MessageQueue from './MessageQueue';
-import detailedViewMessages from '../../lang/lv/detailedViewMessages'; // Import the translations
-import { validateField } from '../utils/Validation';
+import detailedViewMessages from '../../../lang/lv/detailedViewMessages'; // Import the translations
+import { validateField } from '../../utils/Validation';
 
 const DetailedView = ({ onClose, entries, setIsEditing }) => {
     const [editableEntryId, setEditableEntryId] = useState(null);
