@@ -73,7 +73,8 @@ export default {
       showDetailedView: false,
       totalEntries: 0,
       isEditing: false,
-      socketService: null
+      socketService: null,
+      isSubmitting: false, // Add this new flag
     };
   },
   computed: {
@@ -87,13 +88,9 @@ export default {
       document.body.classList.add('dark-mode');
     }
     
-    // Initialize socket service with event handlers
+    // Initialize socket service with event handlers - use the existing method instead of an inline function
     this.socketService = new SocketService({
-      onEntriesUpdated: (updatedEntries) => {
-        this.entries = updatedEntries;
-        this.totalEntries = updatedEntries.length;
-        this.lastId = updatedEntries.length > 0 ? updatedEntries[updatedEntries.length - 1].id : null;
-      }
+      onEntriesUpdated: this.handleEntriesUpdated
     });
     
     this.fetchEntries();
@@ -128,6 +125,7 @@ export default {
   methods: {
     // Handle entries updates from the socket service
     handleEntriesUpdated(updatedEntries) {
+      console.log('Entries updated via socket:', updatedEntries.length);
       this.entries = updatedEntries;
       this.totalEntries = updatedEntries.length;
       this.lastId = updatedEntries.length > 0 ? updatedEntries[updatedEntries.length - 1].id : null;
@@ -177,6 +175,10 @@ export default {
       this.isFormValid = areAllFieldsFilled(this.formData) && validateForm(this.formData);
     },
     handleSubmit(e) {
+      // Add flag to prevent double submission
+      if (this.isSubmitting) return;
+      this.isSubmitting = true;
+      
       e.preventDefault();
       const newErrors = {};
       Object.keys(this.formData).forEach((key) => {
@@ -211,6 +213,7 @@ export default {
           if (response.data && response.data.message) {
             this.addMessageToQueue({ text: response.data.message, type: 'success' });
           }
+          this.isSubmitting = false;
         }).catch((error) => {
           console.error('Error submitting form:', error);
           if (error.response && error.response.data && error.response.data.message) {
@@ -218,7 +221,10 @@ export default {
           } else {
             this.addMessageToQueue({ text: validationMessages.error.submission || 'Error submitting form', type: 'error' });
           }
+          this.isSubmitting = false;
         });
+      } else {
+        this.isSubmitting = false;
       }
     },
     handleEditEntry(id, updatedData) {
