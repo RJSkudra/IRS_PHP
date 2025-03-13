@@ -11,7 +11,7 @@
     <button @click="toggleDarkMode" class="button toggle-button" style="z-index: 1005">
       <i :class="darkMode ? 'fas fa-sun' : 'fas fa-moon'"></i>
     </button>
-    <h1 className="main-title">IRS datu ievade</h1>
+    <h1 className="main-title">IRS datu ievade (Vue.js)</h1>
     <FormComponent
       :formData="formData"
       :errors="errors"
@@ -203,7 +203,7 @@ export default {
               address: '',
             };
             this.touched = {};
-            this.addMessageToQueue({ text: response.message, type: 'success' });
+            this.addMessageToQueue({ text: 'Ieraksts izveidots veiksmīgi', type: 'success' });
           } else {
             this.addMessageToQueue({ text: response.message, type: 'error' });
           }

@@ -353,13 +353,13 @@ export default {
         this.sortedEntries = updatedEntries;
         this.originalEntries = updatedEntries;
         this.addMessageToQueue({ 
-          text: this.messages.messages.entryDeleteSuccess || 'Entry deleted successfully', 
+          text: this.messages.messages.entryDeleteSuccess || 'Ieraksts veiksmīgi dzēsts', 
           type: 'success' 
         });
       } else {
         console.error('Unexpected response:', response);
         this.addMessageToQueue({ 
-          text: this.messages.messages.unexpectedResponse || 'Unexpected server response', 
+          text: this.messages.messages.unexpectedResponse || 'Negaidīta servera atbilde', 
           type: 'error' 
         });
       }
