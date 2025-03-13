@@ -34,13 +34,13 @@
 
 <script>
 import axios from 'axios';
-import io from 'socket.io-client';
 import '../../../sass/app.scss';
 import FormComponent from './FormComponent.vue';
 import TableComponent from './TableComponent.vue';
 import DetailedView from './DetailedView.vue';
 import validationMessages from '../../../lang/lv/validationMessages';
 import MessageQueue from './MessageQueue.vue';
+import SocketService from '../../services/socketService';
 import { validateField, validateForm, areAllFieldsFilled } from '../../utils/Validation';
 
 export default {
@@ -73,6 +73,7 @@ export default {
       showDetailedView: false,
       totalEntries: 0,
       isEditing: false,
+      socketService: null
     };
   },
   computed: {
@@ -86,9 +87,23 @@ export default {
       document.body.classList.add('dark-mode');
     }
     
-    this.setupSocket();
+    // Initialize socket service with event handlers
+    this.socketService = new SocketService({
+      onEntriesUpdated: (updatedEntries) => {
+        this.entries = updatedEntries;
+        this.totalEntries = updatedEntries.length;
+        this.lastId = updatedEntries.length > 0 ? updatedEntries[updatedEntries.length - 1].id : null;
+      }
+    });
+    
     this.fetchEntries();
     this.checkFormValidity();
+  },
+  beforeUnmount() {
+    // Clean up socket connection when component is destroyed
+    if (this.socketService) {
+      this.socketService.disconnect();
+    }
   },
   watch: {
     darkMode(newVal) {
@@ -111,45 +126,13 @@ export default {
     },
   },
   methods: {
-    setupSocket() {
-      const isSecure = window.location.protocol === 'https:';
-      const HOST_DOMAIN = isSecure
-        ? `https://${window.location.hostname}`
-        : `http://${window.location.hostname}`;
-      const SOCKET_URL =
-        window.location.hostname === 'localhost'
-          ? `http://${window.location.hostname}:4000`
-          : HOST_DOMAIN;
-
-      console.log('Connecting to Socket.IO server:', SOCKET_URL, 'with path:', '/socket-api');
-
-      const socket = io(SOCKET_URL, {
-        path: '/socket.io',
-        transports: ['polling', 'websocket'],
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000,
-        timeout: 20000,
-        forceNew: true,
-        secure: isSecure,
-        rejectUnauthorized: false,
-      });
-
-      socket.on('connect', () => {
-        console.log('Connected to WebSocket server with ID:', socket.id);
-        console.log('Transport type:', socket.io.engine.transport.name);
-        socket.emit('handshake', { client: 'web', time: new Date().toISOString() });
-      });
-
-      socket.on('disconnect', (reason) => {
-        console.log('Disconnected from WebSocket server:', reason);
-      });
-
-      socket.on('entriesUpdated', (updatedEntries) => {
-        this.entries = updatedEntries;
-        this.totalEntries = updatedEntries.length;
-        this.lastId = updatedEntries.length > 0 ? updatedEntries[updatedEntries.length - 1].id : null;
-      });
+    // Handle entries updates from the socket service
+    handleEntriesUpdated(updatedEntries) {
+      this.entries = updatedEntries;
+      this.totalEntries = updatedEntries.length;
+      this.lastId = updatedEntries.length > 0 ? updatedEntries[updatedEntries.length - 1].id : null;
     },
+    
     async fetchEntries() {
       try {
         const baseUrl = window.location.origin;
@@ -172,6 +155,7 @@ export default {
         }
       }
     },
+    // ... rest of your methods remain unchanged
     handleDeleteAll() {
       axios.post('/delete-all').then(() => {
         this.entries = [];
