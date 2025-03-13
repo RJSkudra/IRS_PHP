@@ -11,7 +11,7 @@
     <button @click="toggleDarkMode" class="button toggle-button" style="z-index: 1005">
       <i :class="darkMode ? 'fas fa-sun' : 'fas fa-moon'"></i>
     </button>
-    <h1 class="main-title">IRS datu ievade</h1>
+    <h1 className="main-title">IRS datu ievade</h1>
     <FormComponent
       :formData="formData"
       :errors="errors"
@@ -34,13 +34,13 @@
 
 <script>
 import axios from 'axios';
+import io from 'socket.io-client'; // Import Socket.IO client
 import '../../../sass/app.scss';
 import FormComponent from './FormComponent.vue';
 import TableComponent from './TableComponent.vue';
 import DetailedView from './DetailedView.vue';
 import validationMessages from '../../../lang/lv/validationMessages';
 import MessageQueue from './MessageQueue.vue';
-import SocketService from '../../services/socketService';
 import { validateField, validateForm, areAllFieldsFilled } from '../../utils/Validation';
 
 export default {
@@ -73,7 +73,7 @@ export default {
       showDetailedView: false,
       totalEntries: 0,
       isEditing: false,
-      socketService: null,
+      socket: null, // Add socket instance
       isSubmitting: false, // Add this new flag
     };
   },
@@ -88,42 +88,22 @@ export default {
       document.body.classList.add('dark-mode');
     }
     
-    // Initialize socket service with event handlers - use the existing method instead of an inline function
-    this.socketService = new SocketService({
-      onEntriesUpdated: this.handleEntriesUpdated
-    });
-    
+    // Initialize socket connection
+    this.socket = io('http://localhost:4000'); // Adjust the URL as needed
+
+    // Handle entries updates from the socket service
+    this.socket.on('entriesUpdated', this.handleEntriesUpdated);
+
     this.fetchEntries();
     this.checkFormValidity();
   },
   beforeUnmount() {
     // Clean up socket connection when component is destroyed
-    if (this.socketService) {
-      this.socketService.disconnect();
+    if (this.socket) {
+      this.socket.disconnect();
     }
   },
-  watch: {
-    darkMode(newVal) {
-      if (newVal) {
-        document.body.classList.add('dark-mode');
-      } else {
-        document.body.classList.remove('dark-mode');
-      }
-      // Update both storage mechanisms for compatibility
-      this.setCookie('darkMode', newVal);
-      localStorage.setItem('darkMode', newVal);
-    },
-    formData: {
-      handler: 'checkFormValidity',
-      deep: true,
-    },
-    errors: {
-      handler: 'checkFormValidity',
-      deep: true,
-    },
-  },
   methods: {
-    // Handle entries updates from the socket service
     handleEntriesUpdated(updatedEntries) {
       console.log('Entries updated via socket:', updatedEntries.length);
       this.entries = updatedEntries;
@@ -153,12 +133,13 @@ export default {
         }
       }
     },
-    // ... rest of your methods remain unchanged
     handleDeleteAll() {
       axios.post('/delete-all').then(() => {
         this.entries = [];
         this.totalEntries = 0;
         this.addMessageToQueue({ text: validationMessages.success.all_deleted, type: 'success' });
+        // Emit updated entries to the Socket.IO server
+        this.socket.emit('entriesUpdated', []);
       }).catch((error) => {
         console.error('Error deleting all entries:', error);
         this.addMessageToQueue({ text: 'Error deleting all entries', type: 'error' });
@@ -214,6 +195,11 @@ export default {
             this.addMessageToQueue({ text: response.data.message, type: 'success' });
           }
           this.isSubmitting = false;
+          
+          // Fetch updated entries and emit them to the Socket.IO server
+          this.fetchEntries().then(() => {
+            this.socket.emit('entriesUpdated', this.entries);
+          });
         }).catch((error) => {
           console.error('Error submitting form:', error);
           if (error.response && error.response.data && error.response.data.message) {
@@ -226,41 +212,6 @@ export default {
       } else {
         this.isSubmitting = false;
       }
-    },
-    handleEditEntry(id, updatedData) {
-      const baseUrl = window.location.origin;
-      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-      if (!csrfToken) {
-        throw new Error('CSRF token not found. Make sure you have <meta name="csrf-token" content="{{ csrf_token() }}"> in your HTML.');
-      }
-
-      console.log('Updating entry:', id, 'with data:', updatedData);
-
-      axios.post(`${baseUrl}/api/update-entries`, { id, ...updatedData }, {
-        headers: {
-          'X-CSRF-TOKEN': csrfToken,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        withCredentials: true,
-      }).then((response) => {
-        console.log('Update response:', response.data);
-        this.fetchEntries();
-        this.addMessageToQueue({ text: validationMessages.success?.entry_updated || 'Entry updated successfully', type: 'success' });
-      }).catch((error) => {
-        console.error('Error updating entry:', error);
-        if (error.response) {
-          console.error('Response error:', error.response.status, error.response.data);
-          if (error.response.status === 419) {
-            this.addMessageToQueue({ text: 'CSRF token mismatch. Please refresh the page and try again.', type: 'error' });
-          } else {
-            this.addMessageToQueue({ text: error.response.data.message || validationMessages.error?.update || 'Error updating entry', type: 'error' });
-          }
-        } else {
-          this.addMessageToQueue({ text: error.message || validationMessages.error?.update || 'Error updating entry', type: 'error' });
-        }
-      });
     },
     addMessageToQueue(message) {
       const messageWithId = { ...message, id: Date.now() };
@@ -287,7 +238,6 @@ export default {
       const darkModeLocal = localStorage.getItem('darkMode');
       return darkModeLocal === 'true';
     },
-    
     getCookie(name) {
       const cookieValue = document.cookie
         .split('; ')
@@ -295,16 +245,12 @@ export default {
       
       return cookieValue ? cookieValue.split('=')[1] : null;
     },
-    
     setCookie(name, value, days = 365) {
       const date = new Date();
       date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
       const expires = "; expires=" + date.toUTCString();
       document.cookie = name + "=" + value + expires + "; path=/; SameSite=Lax";
     },
-    handleClose() {
-      // Handle close event
-    }
   },
 };
 </script>
