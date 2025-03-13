@@ -33,14 +33,13 @@
 </template>
 
 <script>
-import axios from 'axios';
-import io from 'socket.io-client'; // Import Socket.IO client
 import '../../../sass/app.scss';
 import FormComponent from './FormComponent.vue';
 import TableComponent from './TableComponent.vue';
 import DetailedView from './DetailedView.vue';
 import validationMessages from '../../../lang/lv/validationMessages';
 import MessageQueue from './MessageQueue.vue';
+import SocketService from '../../services/socketService';
 import { validateField, validateForm, areAllFieldsFilled } from '../../utils/Validation';
 
 export default {
@@ -73,7 +72,7 @@ export default {
       showDetailedView: false,
       totalEntries: 0,
       isEditing: false,
-      socket: null, // Add socket instance
+      socketService: null,
       isSubmitting: false, // Add this new flag
     };
   },
@@ -88,22 +87,42 @@ export default {
       document.body.classList.add('dark-mode');
     }
     
-    // Initialize socket connection
-    this.socket = io('http://localhost:4000'); // Adjust the URL as needed
-
-    // Handle entries updates from the socket service
-    this.socket.on('entriesUpdated', this.handleEntriesUpdated);
-
+    // Initialize socket service with event handlers - use the existing method instead of an inline function
+    this.socketService = new SocketService({
+      onEntriesUpdated: this.handleEntriesUpdated
+    });
+    
     this.fetchEntries();
     this.checkFormValidity();
   },
   beforeUnmount() {
     // Clean up socket connection when component is destroyed
-    if (this.socket) {
-      this.socket.disconnect();
+    if (this.socketService) {
+      this.socketService.disconnect();
     }
   },
+  watch: {
+    darkMode(newVal) {
+      if (newVal) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+      // Update both storage mechanisms for compatibility
+      this.setCookie('darkMode', newVal);
+      localStorage.setItem('darkMode', newVal);
+    },
+    formData: {
+      handler: 'checkFormValidity',
+      deep: true,
+    },
+    errors: {
+      handler: 'checkFormValidity',
+      deep: true,
+    },
+  },
   methods: {
+    // Handle entries updates from the socket service
     handleEntriesUpdated(updatedEntries) {
       console.log('Entries updated via socket:', updatedEntries.length);
       this.entries = updatedEntries;
@@ -139,7 +158,7 @@ export default {
         this.totalEntries = 0;
         this.addMessageToQueue({ text: validationMessages.success.all_deleted, type: 'success' });
         // Emit updated entries to the Socket.IO server
-        this.socket.emit('entriesUpdated', []);
+        this.socketService.socket.emit('entriesUpdated', []);
       }).catch((error) => {
         console.error('Error deleting all entries:', error);
         this.addMessageToQueue({ text: 'Error deleting all entries', type: 'error' });
@@ -171,41 +190,22 @@ export default {
       this.errors = newErrors;
 
       if (Object.keys(newErrors).length === 0) {
-        const baseUrl = window.location.origin;
         this.addMessageToQueue({ text: validationMessages.info.submittingForm, type: 'info' });
 
-        axios.post(`${baseUrl}/store`, this.formData, {
-          headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          withCredentials: true,
-        }).then((response) => {
-          console.log('Form submission response:', response);
-          this.formData = {
-            name: '',
-            surname: '',
-            age: '',
-            phone: '',
-            address: '',
-          };
-          this.touched = {};
-          if (response.data && response.data.message) {
-            this.addMessageToQueue({ text: response.data.message, type: 'success' });
-          }
-          this.isSubmitting = false;
-          
-          // Fetch updated entries and emit them to the Socket.IO server
-          this.fetchEntries().then(() => {
-            this.socket.emit('entriesUpdated', this.entries);
-          });
-        }).catch((error) => {
-          console.error('Error submitting form:', error);
-          if (error.response && error.response.data && error.response.data.message) {
-            this.addMessageToQueue({ text: error.response.data.message, type: 'error' });
+        // Emit the form data to the Socket.IO server
+        this.socketService.socket.emit('storeEntry', this.formData, (response) => {
+          if (response.success) {
+            this.formData = {
+              name: '',
+              surname: '',
+              age: '',
+              phone: '',
+              address: '',
+            };
+            this.touched = {};
+            this.addMessageToQueue({ text: response.message, type: 'success' });
           } else {
-            this.addMessageToQueue({ text: validationMessages.error.submission || 'Error submitting form', type: 'error' });
+            this.addMessageToQueue({ text: response.message, type: 'error' });
           }
           this.isSubmitting = false;
         });

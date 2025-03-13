@@ -272,6 +272,29 @@ io.on('connection', (socket) => {
         });
     });
 
+    // Handle storeEntry event
+    socket.on('storeEntry', (formData, callback) => {
+        try {
+            // Validate the form data (you can add more validation as needed)
+            if (!formData.name || !formData.surname || !formData.age || !formData.phone || !formData.address) {
+                return callback({ success: false, message: 'Invalid form data' });
+            }
+
+            // Create a new entry (assuming you have a function to handle this)
+            const newEntry = { ...formData, id: entries.length + 1 };
+            entries.push(newEntry);
+
+            // Broadcast the updated entries to all connected clients
+            io.emit('entriesUpdated', entries);
+
+            // Send success response
+            callback({ success: true, message: 'Entry created successfully' });
+        } catch (error) {
+            console.error('Error storing entry:', error);
+            callback({ success: false, message: 'Failed to store entry' });
+        }
+    });
+
     // Handle errors
     socket.on('error', (error) => {
         console.error('Socket error:', error);
@@ -282,7 +305,6 @@ io.on('connection', (socket) => {
         console.log(`Client disconnected (${reason}): ${socket.id}`);
     });
 });
-
 
 // Handle server-level errors
 server.on('error', (error) => {
