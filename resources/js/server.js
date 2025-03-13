@@ -103,35 +103,32 @@ app.use((req, res, next) => {
 let entries = [];
 
 // API Routes - Use the dynamic API_PREFIX
-app.post(`${API_PREFIX}/update-entries`, (req, res) => {
+app.post(`${API_PREFIX}/update-entries`, handleUpdateEntries);
+app.post('/socket.io/update-entries', handleUpdateEntries);
+
+// Extract the handler to a separate function to avoid duplication
+function handleUpdateEntries(req, res) {
     try {
-        console.log('Received update request:', req.body);
-        
-        // Log headers to debug CSRF issues
-        console.log('Request headers:', req.headers);
-        
-        // Check for CSRF token in header (for Laravel CSRF)
-        const csrfHeader = req.headers['x-csrf-token'];
-        
-        if (!csrfHeader) {
-            console.warn('Missing CSRF token in request');
-            // Continue anyway since we're handling this in the Node server
-            // (Laravel CSRF protection isn't needed here)
-        } else {
-            console.log('CSRF token present:', csrfHeader);
-        }
-        
+        console.log('Received update request via:', req.path);
+        console.log('Request body:', req.body);
+
         if (!req.body.entries || !Array.isArray(req.body.entries)) {
+            console.error('Invalid entries data:', req.body);
             return res.status(400).send({ error: 'Invalid entries data' });
         }
+
         entries = req.body.entries;
+        console.log(`Broadcasting ${entries.length} entries to ${io.engine.clientsCount} connected clients`);
         io.emit('entriesUpdated', entries);
         res.status(200).send({ message: 'Entries updated successfully' });
     } catch (error) {
         console.error('Error updating entries:', error);
         res.status(500).send({ error: 'Failed to update entries' });
     }
-});
+}
+
+// Add this if it doesn't exist
+app.post('/socket.io/update-entries', handleUpdateEntries);
 
 // Update other API routes to use the dynamic prefix
 app.delete(`${API_PREFIX}/delete/:id`, (req, res) => {
@@ -286,70 +283,6 @@ io.on('connection', (socket) => {
     });
 });
 
-// Special route for WebSocket testing
-app.get('/socket-test', (req, res) => {
-    // Determine if we're using HTTPS from the request
-    const isSecure = req.headers['x-forwarded-proto'] === 'https' || req.protocol === 'https';
-    
-    res.send(`
-        <html>
-            <head>
-                <title>Socket.IO Test</title>
-                <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
-                <script>
-                    document.addEventListener('DOMContentLoaded', () => {
-                        document.getElementById('status').textContent = 'Attempting connection...';
-                        
-                        const socketUrl = '${HOST_DOMAIN}';
-                        console.log('Connecting to Socket.IO at:', socketUrl);
-                        
-                        // More robust connection options
-                        const socket = io(socketUrl, {
-                            path: '/socket.io',
-                            transports: ['polling', 'websocket'], // Try polling first
-                            reconnectionAttempts: 5,
-                            reconnectionDelay: 1000,
-                            timeout: 20000,
-                            forceNew: true,
-                            secure: ${isSecure}, // Set based on protocol
-                            rejectUnauthorized: false // For development only
-                        });
-                        
-                        socket.on('connect', () => {
-                            document.getElementById('status').textContent = 'Connected to Socket.IO server';
-                            document.getElementById('transport').textContent = socket.io.engine.transport.name;
-                            document.getElementById('id').textContent = socket.id;
-                            console.log('Connected with transport:', socket.io.engine.transport.name);
-                        });
-                        
-                        socket.on('connect_error', (error) => {
-                            console.error('Connection error:', error);
-                            document.getElementById('status').textContent = 'Connection error: ' + error;
-                        });
-                        
-                        socket.on('reconnect_attempt', (attempt) => {
-                            console.log('Reconnection attempt:', attempt);
-                            document.getElementById('status').textContent = 'Reconnection attempt: ' + attempt;
-                        });
-                        
-                        socket.on('entriesUpdated', (data) => {
-                            document.getElementById('entries').textContent = 
-                                'Received ' + data.length + ' entries';
-                        });
-                    });
-                </script>
-            </head>
-            <body>
-                <h1>Socket.IO Test Page</h1>
-                <div>Status: <span id="status">Connecting...</span></div>
-                <div>Transport: <span id="transport">-</span></div>
-                <div>Socket ID: <span id="id">-</span></div>
-                <div>Data: <span id="entries">-</span></div>
-                <div><button onclick="location.reload()">Reconnect</button></div>
-            </body>
-        </html>
-    `);
-});
 
 // Handle server-level errors
 server.on('error', (error) => {
@@ -360,7 +293,6 @@ server.on('error', (error) => {
 server.listen(PORT, HOST, () => {
     console.log(`Socket.IO server is running on port ${PORT}`);
     console.log(`Health check available at http://${HOST}:${PORT}/health`);
-    console.log(`Socket test page available at http://${HOST}:${PORT}/socket-test`);
     console.log(`Socket.IO path is configured as: ${io.path()}`);
 });
 
