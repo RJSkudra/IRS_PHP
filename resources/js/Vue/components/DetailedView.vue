@@ -286,7 +286,106 @@ export default {
         return 0;
       });
     },
+    
+    handleDelete(id) {
+      if (confirm(this.messages.messages.confirmDelete)) {
+        try {
+          const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+          const updatedEntries = this.sortedEntries.filter(entry => entry.id !== id);
+          
+          const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+          let apiUrl;
+          
+          const makeRequest = async (url) => {
+            return await axios.post(url, { 
+              entries: updatedEntries,
+              deletedEntryId: id 
+            }, {
+              headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              withCredentials: true,
+            });
+          };
+
+          if (isLocalDev) {
+            const socketPort = 4000;
+            const apiBaseUrl = `http://${window.location.hostname}:${socketPort}`;
+            const apiPrefix = '/socket-api';
+            const nodeServerUrl = `${apiBaseUrl}${apiPrefix}/delete-entry`;
+
+            console.log(`Attempting to delete entry via Node.js server at: ${nodeServerUrl}`);
+
+            makeRequest(nodeServerUrl)
+              .then(response => {
+                this.handleDeleteSuccess(response, updatedEntries);
+              })
+              .catch(nodeError => {
+                console.warn(`Node.js server connection failed: ${nodeError.message}`);
+                
+                const laravelServerUrl = `${window.location.origin}/api/delete-entry`;
+                console.log(`Attempting to delete entry via Laravel server at: ${laravelServerUrl}`);
+                
+                return makeRequest(laravelServerUrl);
+              })
+              .then(response => {
+                if (response) this.handleDeleteSuccess(response, updatedEntries);
+              })
+              .catch(error => {
+                this.handleDeleteError(error);
+              });
+          } else {
+            apiUrl = `${window.location.origin}/api/delete-entry`;
+            
+            makeRequest(apiUrl)
+              .then(response => {
+                this.handleDeleteSuccess(response, updatedEntries);
+              })
+              .catch(error => {
+                this.handleDeleteError(error);
+              });
+          }
+        } catch (error) {
+          this.handleDeleteError(error);
+        }
+      }
+    },
+
+    handleDeleteSuccess(response, updatedEntries) {
+      if (response.status === 200) {
+        this.sortedEntries = updatedEntries;
+        this.originalEntries = updatedEntries;
+        this.addMessageToQueue({ 
+          text: this.messages.messages.entryDeleteSuccess || 'Entry deleted successfully', 
+          type: 'success' 
+        });
+      } else {
+        console.error('Unexpected response:', response);
+        this.addMessageToQueue({ 
+          text: this.messages.messages.unexpectedResponse || 'Unexpected server response', 
+          type: 'error' 
+        });
+      }
+    },
+
+    handleDeleteError(error) {
+      console.error('Error deleting entry:', error);
+      this.addMessageToQueue({
+        text: error.response?.data?.message || 
+              (this.messages.messages.errorDeletingEntry 
+                ? this.messages.messages.errorDeletingEntry.replace('{0}', '') 
+                : 'Error deleting entry'),
+        type: 'error',
+      });
+    },
+    
+    saveColumnWidths() {
+      // Your saveColumnWidths implementation goes here
+    }
   },
+  
   mounted() {
     window.addEventListener('beforeunload', this.saveColumnWidths);
   },
