@@ -67,7 +67,7 @@ export default {
       touched: {},
       entries: [],
       lastId: null,
-      darkMode: localStorage.getItem('darkMode') === 'true',
+      darkMode: this.getDarkModePreference(),
       isFormValid: false,
       messageQueue: [],
       showDetailedView: false,
@@ -81,6 +81,11 @@ export default {
     },
   },
   mounted() {
+    // Apply dark mode class to body if needed
+    if (this.darkMode) {
+      document.body.classList.add('dark-mode');
+    }
+    
     this.setupSocket();
     this.fetchEntries();
     this.checkFormValidity();
@@ -92,6 +97,8 @@ export default {
       } else {
         document.body.classList.remove('dark-mode');
       }
+      // Update both storage mechanisms for compatibility
+      this.setCookie('darkMode', newVal);
       localStorage.setItem('darkMode', newVal);
     },
     formData: {
@@ -277,6 +284,33 @@ export default {
     },
     toggleDarkMode() {
       this.darkMode = !this.darkMode;
+      this.setCookie('darkMode', this.darkMode);
+    },
+    getDarkModePreference() {
+      // First check for cookie
+      const darkModeCookie = this.getCookie('darkMode');
+      if (darkModeCookie !== null) {
+        return darkModeCookie === 'true';
+      }
+      
+      // Fall back to localStorage if no cookie exists
+      const darkModeLocal = localStorage.getItem('darkMode');
+      return darkModeLocal === 'true';
+    },
+    
+    getCookie(name) {
+      const cookieValue = document.cookie
+        .split('; ')
+        .find(row => row.startsWith(name + '='));
+      
+      return cookieValue ? cookieValue.split('=')[1] : null;
+    },
+    
+    setCookie(name, value, days = 365) {
+      const date = new Date();
+      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+      const expires = "; expires=" + date.toUTCString();
+      document.cookie = name + "=" + value + expires + "; path=/; SameSite=Lax";
     },
     handleClose() {
       // Handle close event
